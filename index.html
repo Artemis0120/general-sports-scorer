@@ -1,0 +1,1891 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="体育成绩">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="manifest" href="manifest.json">
+<title>体育成绩管理系统</title>
+<style>
+:root {
+  --primary: #007AFF;
+  --danger: #FF3B30;
+  --success: #34C759;
+  --warning: #FF9500;
+  --bg: #F2F2F7;
+  --card: #FFFFFF;
+  --text: #1C1C1E;
+  --text2: #8E8E93;
+  --sep: #E5E5EA;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+  max-width: 900px; margin: 0 auto; padding-bottom: 80px;
+}
+header {
+  background: var(--primary); color: #fff;
+  padding: 10px 16px; position: sticky; top: 0; z-index: 100;
+}
+header .top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+header h1 { font-size: 18px; font-weight: 600; }
+header .count { font-size: 13px; opacity: .85; }
+header .course-switch { display: flex; gap: 6px; }
+header .course-switch button {
+  flex: 1; padding: 6px 0; border: 1.5px solid rgba(255,255,255,.5); border-radius: 8px;
+  background: none; color: rgba(255,255,255,.7); font-size: 13px; font-weight: 600; cursor: pointer; transition: .15s;
+}
+header .course-switch button.active { background: #fff; color: var(--primary); border-color: #fff; }
+nav {
+  display: flex; background: var(--card); border-bottom: 1px solid var(--sep);
+  position: sticky; top: 92px; z-index: 99; overflow-x: auto;
+}
+nav button {
+  flex: 1; min-width: fit-content; padding: 10px 8px; border: none;
+  background: none; font-size: 13px; color: var(--text2); white-space: nowrap;
+  border-bottom: 2px solid transparent; cursor: pointer; transition: .15s;
+}
+nav button.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+.page { display: none; padding: 12px; }
+.page.active { display: block; }
+.card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow);
+}
+.card h2 { font-size: 16px; margin-bottom: 12px; }
+.card h3 { font-size: 14px; margin-bottom: 8px; color: var(--text2); }
+label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 4px; }
+input:not([type="checkbox"]):not([type="file"]), select, textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--sep);
+  border-radius: 8px; font-size: 15px; font-family: inherit;
+  background: var(--bg); -webkit-appearance: none;
+}
+input:focus, select:focus { outline: none; border-color: var(--primary); }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 10px 20px; border-radius: 8px; font-size: 15px; font-weight: 600;
+  border: none; cursor: pointer; transition: .15s;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-outline { background: none; border: 1.5px solid var(--primary); color: var(--primary); }
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+.btn-block { width: 100%; margin-top: 8px; }
+.btn:active { opacity: .7; }
+.form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.form-row > * { flex: 1; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--sep); }
+th { font-weight: 600; color: var(--text2); font-size: 12px; white-space: nowrap; }
+tr.disqualified { background: #FFF3F3; color: var(--danger); }
+.score-good { color: var(--success); font-weight: 600; }
+.score-bad { color: var(--danger); font-weight: 600; }
+.tag {
+  display: inline-block; padding: 2px 6px; border-radius: 4px;
+  font-size: 11px; font-weight: 600;
+}
+.tag-warn { background: #FFF3CD; color: #856404; }
+.tag-danger { background: #FFE5E5; color: #C00; }
+.tag-info { background: #E5F0FF; color: #004C99; }
+.gap { gap: 8px; }
+.mt { margin-top: 8px; }
+.mb { margin-bottom: 8px; }
+.hidden { display: none !important; }
+.upload-area {
+  border: 2px dashed var(--sep); border-radius: var(--radius);
+  padding: 32px; text-align: center; cursor: pointer; transition: .15s;
+}
+.upload-area:hover { border-color: var(--primary); background: #F0F6FF; }
+.upload-area .icon { font-size: 36px; margin-bottom: 8px; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.stat-card {
+  background: var(--card); border-radius: var(--radius); padding: 12px;
+  text-align: center; box-shadow: var(--shadow);
+}
+.stat-card .num { font-size: 28px; font-weight: 700; color: var(--primary); }
+.stat-card .label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.att-log { font-size: 13px; }
+.att-log .row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--sep); }
+.att-log .row .remove-btn { color: var(--danger); cursor: pointer; font-size: 16px; }
+input[type="file"] { display: none; }
+td input[type="checkbox"], th input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; -webkit-appearance: checkbox; appearance: checkbox; accent-color: var(--primary); }
+@media (max-width: 480px) {
+  .card { padding: 12px; }
+  th, td { padding: 6px 4px; font-size: 11px; }
+  .form-row { flex-direction: column; }
+}
+/* 课程管理弹窗 */
+.modal-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px;
+}
+.modal-box {
+  background: #fff; border-radius: 14px; width: 100%; max-width: 560px;
+  max-height: 85vh; overflow-y: auto; padding: 16px; box-shadow: 0 8px 30px rgba(0,0,0,.2);
+}
+.modal-box h2 { font-size: 17px; margin-bottom: 12px; }
+.cm-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--sep); }
+.cm-row .cm-name { flex: 1; font-size: 14px; font-weight: 600; }
+.cm-row select { width: 110px; padding: 6px 8px; font-size: 13px; border: 1px solid var(--sep); border-radius: 6px; background: #fff; }
+.cm-row .cm-del { color: var(--danger); cursor: pointer; font-size: 16px; padding: 0 6px; }
+.cm-add-row { display: flex; gap: 8px; margin-top: 12px; }
+.cm-add-row input { flex: 1; }
+.cm-add-row select { width: 110px; }
+.cm-foot { display: flex; gap: 8px; margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top-row">
+    <h1>体育成绩管理</h1>
+    <span class="count" id="studentCount">0 名学生</span>
+  </div>
+  <div class="course-switch">
+    <select id="courseSelect" onchange="switchCourse(this.value)" style="flex:1;padding:8px 10px;border-radius:8px;border:none;font-size:15px;font-weight:600;background:#fff;color:var(--primary);"></select>
+    <button onclick="openCourseManage()" style="flex:0 0 auto;padding:8px 12px;border-radius:8px;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:14px;font-weight:600;cursor:pointer;">⚙️ 课程管理</button>
+  </div>
+</header>
+
+<nav id="nav">
+  <button data-page="students">📋 学生</button>
+  <button data-page="attendance">📅 考勤</button>
+  <button data-page="fitness">💪 身体素质</button>
+  <button data-page="sport">🎯 专项</button>
+  <button data-page="competition">🏆 赛事</button>
+  <button data-page="sunny">☀️ 阳光长跑</button>
+  <button data-page="query">🔍 查询</button>
+  <button data-page="overview">📊 总览</button>
+</nav>
+
+<!-- ==================== 学生管理页 ==================== -->
+<div class="page active" id="page-students">
+  <div class="card">
+    <h2>📥 导入学生</h2>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">
+      支持 .xlsx / .xls 文件，表头需包含：<b>班级、姓名、学号、性别</b>
+    </p>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:8px">
+      💡 Sheet 名带课程前缀（如「垒球周一1-2」）自动归类到对应课程；不带前缀的 Sheet 归入下方选中的「默认课程」，上传后仍可逐个调整。
+    </p>
+    <div class="form-row">
+      <div style="flex:1"><label>📚 默认课程</label>
+        <select id="importCourseSelect"></select>
+      </div>
+      <div style="flex:1"><label>📂 课程时间（可选）</label>
+        <input id="importGroup" placeholder="如: 周一1-2">
+      </div>
+    </div>
+    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+      <div class="icon">📂</div>
+      <div>点击上传 Excel 文件</div>
+    </div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(event)">
+    <div id="importPreview" class="mt hidden"></div>
+  </div>
+
+  <div class="card">
+    <h2>✍️ 手动添加</h2>
+    <div class="form-row">
+      <div><label>班级</label><input id="mClass" placeholder="如: 计算机2201"></div>
+      <div><label>姓名</label><input id="mName" placeholder="姓名"></div>
+    </div>
+    <div class="form-row">
+      <div><label>学号</label><input id="mSid" placeholder="学号"></div>
+      <div><label>性别</label><select id="mGender"><option value="男">男</option><option value="女">女</option></select></div>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="addStudent()">➕ 添加</button>
+    <p id="addMsg" style="font-size:12px;color:var(--danger);margin-top:4px"></p>
+  </div>
+
+  <div class="card" id="studentListCard">
+    <h2>👥 学生列表 <span style="font-size:12px;color:var(--text2)" id="listInfo"></span></h2>
+    <div class="form-row">
+      <div style="flex:1"><label>课程时间</label>
+        <select id="studentGroup" onchange="renderStudents()"><option value="">-- 全部 --</option></select>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="studentTable">
+        <thead><tr><th style="width:32px"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th><th>课程类型</th><th>课程时间</th><th>班级</th><th>姓名</th><th>学号</th><th>性别</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody id="studentTbody"></tbody>
+      </table>
+    </div>
+    <div class="form-row" style="margin-top:8px">
+      <button class="btn btn-outline btn-sm" onclick="clearAll()">🗑 清空全部</button>
+      <button class="btn btn-danger btn-sm" id="batchDelBtn" onclick="batchDelete()" disabled>🗑 删除选中（0）</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>💾 数据备份 & 迁移</h2>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:8px">
+      导出备份：保存成文件 → 发送到电脑<br>
+      导入恢复：打开备份文件 → 数据同步
+    </p>
+    <div class="form-row">
+      <div style="flex:1"><label>📅 学期开始日期</label>
+        <input type="date" id="semesterStart" onchange="saveSemesterStart()">
+      </div>
+    </div>
+    <div class="form-row">
+      <button class="btn btn-primary btn-block" onclick="exportData()">📤 导出数据</button>
+      <button class="btn btn-outline btn-block" onclick="document.getElementById('importFileInput').click()">📥 导入数据</button>
+    </div>
+    <input type="file" id="importFileInput" onchange="importData(event)" style="display:none">
+    <p id="importMsg" style="font-size:12px;color:var(--text2);margin-top:4px"></p>
+  </div>
+</div>
+
+<!-- ==================== 考勤页 ==================== -->
+<div class="page" id="page-attendance">
+  <div class="card">
+    <h2>📋 课程时间点名</h2>
+    <div class="form-row">
+      <div style="flex:1"><label>课程时间</label>
+        <select id="attGroup" onchange="loadGroupAttendance()"><option value="">-- 请选择 --</option></select>
+      </div>
+      <div style="flex:1"><label>日期</label>
+        <input type="date" id="attGroupDate" onchange="loadGroupAttendance()">
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:8px">
+      空白=出勤 <b>○</b>旷课 <b>◎</b>病假 <b>⊕</b>事假 <b>√</b>公假 <b>△</b>见习
+    </p>
+    <div id="groupAttContent"><div style="color:var(--text2);padding:12px;text-align:center">请选择课程时间和日期</div></div>
+  </div>
+  <div class="card" id="attStudentSelector">
+    <h2>🔍 查看单个学生考勤详情</h2>
+    <div>
+      <label>搜索（拼音首字母或学号）</label>
+      <input id="attPinyin" placeholder="如: ZJW 或 20241309" oninput="filterAttStudent()" style="font-size:14px;margin-bottom:8px">
+    </div>
+    <div class="form-row">
+      <div><label>课程时间</label><select id="attQueryGroup" onchange="filterAttStudent()"><option value="">-- 全部 --</option></select></div>
+      <div><label>学生</label><select id="attStudent" onchange="loadAttendance()"><option value="">-- 请选择 --</option></select></div>
+    </div>
+  </div>
+  <div id="attContent" class="hidden">
+    <div class="card"><h2 id="attTitle"></h2><div class="stats-grid" id="attStats"></div></div>
+    <div class="card">
+      <h2>➕ 添加考勤记录</h2>
+      <div class="form-row">
+        <div><label>类型</label><select id="attType"><option value="旷课">旷课</option><option value="病假">病假</option><option value="事假">事假</option><option value="公假">公假</option><option value="见习">见习(女)</option></select></div>
+        <div><label>日期</label><input type="date" id="attDate"></div>
+      </div>
+      <div><label>备注</label><input id="attNote" placeholder="可选"></div>
+      <button class="btn btn-primary btn-block mt" onclick="addAttendance()">➕ 添加记录</button>
+    </div>
+    <div class="card"><h2>📋 考勤记录</h2><div class="att-log" id="attLog"></div></div>
+  </div>
+</div>
+
+<!-- ==================== 身体素质页 ==================== -->
+<div class="page" id="page-fitness">
+  <div class="card">
+    <h2>💪 按课程时间录入身体素质</h2>
+    <div class="form-row">
+      <div style="flex:1"><label>课程时间</label>
+        <select id="fitGroup" onchange="loadGroupFitness()"><option value="">-- 请选择 --</option></select>
+      </div>
+      <div style="flex:1"><label>测试项目</label>
+        <select id="fitItem" onchange="loadGroupFitness()">
+          <option value="">-- 请选择 --</option>
+          <option value="f_50m">50m跑（秒）</option>
+          <option value="f_800m">800m跑 女（分:秒）</option>
+          <option value="f_1000m">1000m跑 男（分:秒）</option>
+          <option value="f_situp">仰卧起坐 女（个）</option>
+          <option value="f_pullup">引体向上 男（个）</option>
+          <option value="f_lj">立定跳远（cm）</option>
+        </select>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:8px">输入原始成绩后自动算分，焦点移出自动保存</p>
+    <div id="groupFitContent"><div style="color:var(--text2);padding:12px;text-align:center">请选择课程时间和测试项目</div></div>
+  </div>
+  <div class="card">
+    <h2>🔍 查看单个学生身体素质</h2>
+    <div>
+      <label>搜索（拼音首字母或学号）</label>
+      <input id="fitPinyin" placeholder="如: ZJW 或 20241309" oninput="filterFitStudent()" style="font-size:14px;margin-bottom:8px">
+    </div>
+    <div class="form-row">
+      <div><label>课程时间</label><select id="fitQueryGroup" onchange="filterFitStudent()"><option value="">-- 全部 --</option></select></div>
+      <div><label>学生</label><select id="fitStudent" onchange="loadFitness()"><option value="">-- 请选择 --</option></select></div>
+    </div>
+  </div>
+  <div id="fitContent" class="hidden">
+    <div class="card">
+      <h2 id="fitTitle"></h2>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:8px">输入原始成绩，系统自动对照评分表算出分数</p>
+      <div id="fitInputs"></div>
+      <button class="btn btn-primary btn-block" onclick="saveFitness()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 专项页（根据课程类型变化） ==================== -->
+<div class="page" id="page-sport">
+  <div class="card">
+    <h2 id="sportHeader">🎯 按课程时间录入专项成绩</h2>
+    <div class="form-row">
+      <div style="flex:1"><label>课程时间</label>
+        <select id="sportGroup" onchange="loadGroupSport()"><option value="">-- 请选择 --</option></select>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:8px" id="sportHint">
+      输入成绩后自动保存
+    </p>
+    <div id="groupSportContent"><div style="color:var(--text2);padding:12px;text-align:center">请选择课程时间</div></div>
+  </div>
+</div>
+
+<!-- ==================== 专项赛事页 ==================== -->
+<div class="page" id="page-competition">
+  <div class="card">
+    <h2>🏆 按课程时间录入赛事成绩</h2>
+    <div class="form-row">
+      <div style="flex:1"><label>课程时间</label>
+        <select id="compGroup" onchange="loadGroupComp()"><option value="">-- 请选择 --</option></select>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:8px">
+      竞赛一(5分) + 竞赛二(5分) + 校级赛事(10分) → <b>上限10分</b>
+    </p>
+    <div id="groupCompContent"><div style="color:var(--text2);padding:12px;text-align:center">请选择课程时间</div></div>
+  </div>
+</div>
+
+<!-- ==================== 阳光长跑页 ==================== -->
+<div class="page" id="page-sunny">
+  <div class="card">
+    <h2>☀️ 按课程时间录入阳光长跑</h2>
+    <div class="form-row">
+      <div style="flex:1"><label>课程时间</label>
+        <select id="sunnyGroup" onchange="loadGroupSunny()"><option value="">-- 请选择 --</option></select>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:8px">直接填写 0-10 分，默认10分</p>
+    <div id="groupSunnyContent"><div style="color:var(--text2);padding:12px;text-align:center">请选择课程时间</div></div>
+  </div>
+</div>
+
+<!-- ==================== 查询页 ==================== -->
+<div class="page" id="page-query">
+  <div class="card">
+    <h2>🔍 查询单个学生</h2>
+    <div>
+      <label>搜索（拼音首字母或学号）</label>
+      <input id="queryPinyin" placeholder="如: ZJW 或 20241309" oninput="filterQueryStudents()" style="font-size:14px;margin-bottom:8px">
+    </div>
+    <div class="form-row">
+      <div><label>课程时间</label><select id="queryGroup" onchange="filterQueryStudents()"><option value="">-- 全部 --</option></select></div>
+      <div><label>学生</label><select id="detailStudent" onchange="showStudentDetail()"><option value="">-- 请选择 --</option></select></div>
+    </div>
+    <div id="studentDetailContent" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ==================== 总览页 ==================== -->
+<div class="page" id="page-overview">
+  <div class="card">
+    <h2>📊 成绩总览</h2>
+    <div class="form-row">
+      <div style="flex:1"><label>课程时间</label>
+        <select id="overviewGroup" onchange="renderOverview()"><option value="">-- 全部 --</option></select>
+      </div>
+      <div style="flex:0 0 auto;display:flex;align-items:flex-end"><button class="btn btn-outline btn-sm" onclick="exportExcel()">📥 导出 Excel</button></div>
+    </div>
+    <div style="overflow-x:auto;margin-top:8px">
+      <table id="overviewTable"><thead></thead><tbody></tbody></table>
+    </div>
+  </div>
+  <div class="card" id="statsCard">
+    <h2>📈 统计分析</h2>
+    <div><label>按维度筛选</label><select id="statGroup" onchange="refreshStats()"><option value="all">全部</option><option value="group">按课程时间</option><option value="class">按班级</option></select></div>
+    <div class="stats-grid mt" id="statsGrid"></div>
+  </div>
+</div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script>
+// ========== DATA STORE ==========
+const STORE_KEY = 'general_sports_scorer_data';
+const DEFAULT_COURSES = [
+  { name: '乒乓球', icon: '🏓', sport1Max: 20, sport2Max: 20 },
+  { name: '跆拳道', icon: '🥋', sport1Max: 20, sport2Max: 20 },
+  { name: '搏击', icon: '🥊', sport1Max: 20, sport2Max: 20 },
+  { name: '橄榄球', icon: '🏉', sport1Max: 20, sport2Max: 20 },
+  { name: '篮球', icon: '🏀', sport1Max: 20, sport2Max: 20 },
+  { name: '垒球', icon: '⚾', sport1Max: 20, sport2Max: 20 },
+  { name: '排球', icon: '🏐', sport1Max: 20, sport2Max: 20 },
+  { name: '羽毛球', icon: '🏸', sport1Max: 20, sport2Max: 20 },
+  { name: '健美操', icon: '🤸', sport1Max: 20, sport2Max: 20 },
+  { name: '形体', icon: '🧘', sport1Max: 20, sport2Max: 20 },
+  { name: '武术', icon: '👊', sport1Max: 20, sport2Max: 20 },
+  { name: '啦啦操', icon: '📣', sport1Max: 20, sport2Max: 20 },
+  { name: '足球', icon: '⚽', sport1Max: 20, sport2Max: 20 },
+  { name: '气排', icon: '🏐', sport1Max: 20, sport2Max: 20 },
+  { name: '普拉提', icon: '🧘', sport1Max: 20, sport2Max: 20 },
+  { name: '户外', icon: '🥏', sport1Max: 30, sport2Max: 10 },
+  { name: '体育舞蹈', icon: '💃', sport1Max: 20, sport2Max: 20 },
+  { name: '瑜伽', icon: '🧘', sport1Max: 20, sport2Max: 20 },
+  { name: '台球', icon: '🎱', sport1Max: 20, sport2Max: 20 },
+  { name: '匹克球', icon: '🏸', sport1Max: 20, sport2Max: 20 },
+  { name: '民族', icon: '🐉', sport1Max: 20, sport2Max: 20 }
+];
+function cloneCourses() { return JSON.parse(JSON.stringify(DEFAULT_COURSES)); }
+let DB = { students: [], currentCourse: '垒球', courses: cloneCourses() };
+function saveDB() { localStorage.setItem(STORE_KEY, JSON.stringify(DB)); }
+function loadDB() {
+  const raw = localStorage.getItem(STORE_KEY);
+  if (raw) { try { DB = JSON.parse(raw); } catch(e) { DB = { students: [], currentCourse: '垒球', courses: cloneCourses() }; } }
+  if (!DB.students) DB.students = [];
+  if (!DB.startDate) DB.startDate = '';
+  if (!DB.currentCourse) DB.currentCourse = '垒球';
+  if (!DB.courses || !Array.isArray(DB.courses) || DB.courses.length === 0) DB.courses = cloneCourses();
+  // 数据迁移：旧课程名"户外运动" → "户外"
+  for (var mi = 0; mi < DB.students.length; mi++) {
+    if (DB.students[mi].course === '户外运动') DB.students[mi].course = '户外';
+  }
+  if (DB.currentCourse === '户外运动') DB.currentCourse = '户外';
+}
+loadDB();
+
+// Restore course
+function renderCourseSelect() {
+  var courses = DB.courses || [];
+  var sel = $('courseSelect');
+  if (sel) {
+    var html = '';
+    for (var i = 0; i < courses.length; i++) {
+      var c = courses[i];
+      html += '<option value="' + esc(c.name) + '"' + (c.name === DB.currentCourse ? ' selected' : '') + '>' + c.icon + ' ' + esc(c.name) + '</option>';
+    }
+    sel.innerHTML = html;
+  }
+  var impSel = $('importCourseSelect');
+  if (impSel) {
+    var html2 = '';
+    for (var j = 0; j < courses.length; j++) {
+      var c2 = courses[j];
+      html2 += '<option value="' + esc(c2.name) + '">' + c2.icon + ' ' + esc(c2.name) + '</option>';
+    }
+    impSel.innerHTML = html2;
+    impSel.value = DB.currentCourse;
+  }
+}
+function restoreCourse() {
+  renderCourseSelect();
+}
+
+// ========== HELPERS ==========
+function $(id) { return document.getElementById(id); }
+function timeToSec(t) {
+  if (typeof t === 'number') return t;
+  if (!t || t === '') return null;
+  t = String(t).trim();
+  const m = t.match(/^(\d+)['′:](\d+(?:\.\d+)?)["″]?$/);
+  if (m) return parseInt(m[1]) * 60 + parseFloat(m[2]);
+  const s = parseFloat(t);
+  if (isNaN(s)) return null;
+  if (s <= 15) return s * 60;
+  return s;
+}
+function secToTime(s) {
+  if (s === null || s === undefined) return '';
+  const m = Math.floor(s / 60);
+  const sec = Math.round(s % 60);
+  return m > 0 ? `${m}'${String(sec).padStart(2,'0')}"` : `${sec}"`;
+}
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// ========== COURSE SWITCH ==========
+function switchCourse(course) {
+  if (!course) return;
+  DB.currentCourse = course;
+  saveDB();
+  renderCourseSelect();
+  // Refresh views
+  populateGroupSelect('studentGroup'); renderStudents(); updateCount();
+  populateGroupSelect('attQueryGroup'); filterAttStudent();
+  populateGroupSelect('fitQueryGroup'); filterFitStudent();
+  populateGroupSelect('queryGroup'); filterQueryStudents();
+  populateGroupSelect('overviewGroup'); renderOverview();
+  updateSportLabels();
+  document.querySelectorAll('#nav button.active').forEach(b => { if (b.dataset.page === 'sport') loadGroupSport(); });
+}
+
+function getStudentsByCourse() {
+  if (!DB.currentCourse) return DB.students;
+  return DB.students.filter(s => (s.course || '') === DB.currentCourse);
+}
+
+// ========== SCORING TABLES ==========
+const FEMALE_800M = [
+  [timeToSec("3'18\""), 10], [timeToSec("3'24\""), 9.5], [timeToSec("3'30\""), 9],
+  [timeToSec("3'37\""), 8.5], [timeToSec("3'44\""), 8], [timeToSec("3'49\""), 7.8],
+  [timeToSec("3'54\""), 7.6], [timeToSec("3'59\""), 7.4], [timeToSec("4'04\""), 7.2],
+  [timeToSec("4'09\""), 7], [timeToSec("4'14\""), 6.8], [timeToSec("4'19\""), 6.6],
+  [timeToSec("4'24\""), 6.4], [timeToSec("4'29\""), 6.2], [timeToSec("4'34\""), 6],
+  [timeToSec("4'44\""), 5], [timeToSec("4'54\""), 4], [timeToSec("5'04\""), 3],
+  [timeToSec("5'14\""), 2], [timeToSec("5'24\""), 1]
+];
+const MALE_1000M = [
+  [timeToSec("3'17\""), 10], [timeToSec("3'22\""), 9.5], [timeToSec("3'27\""), 9],
+  [timeToSec("3'34\""), 8.5], [timeToSec("3'42\""), 8], [timeToSec("3'47\""), 7.8],
+  [timeToSec("3'52\""), 7.6], [timeToSec("3'57\""), 7.4], [timeToSec("4'02\""), 7.2],
+  [timeToSec("4'07\""), 7], [timeToSec("4'12\""), 6.6], [timeToSec("4'17\""), 6.6],
+  [timeToSec("4'22\""), 6.4], [timeToSec("4'27\""), 6.2], [timeToSec("4'32\""), 6],
+  [timeToSec("4'52\""), 5], [timeToSec("5'12\""), 4], [timeToSec("5'32\""), 3],
+  [timeToSec("5'52\""), 2], [timeToSec("6'12\""), 1]
+];
+const FEMALE_SITUPS = [
+  [56, 10], [54, 9.5], [52, 9], [49, 8.5], [46, 8], [44, 7.8], [42, 7.6], [40, 7.4],
+  [38, 7.2], [36, 7], [34, 6.8], [32, 6.6], [30, 6.4], [28, 6.2], [26, 6],
+  [24, 5], [22, 4], [20, 3], [18, 2], [16, 1]
+];
+const MALE_PULLUPS = [
+  [17, 10], [16, 9.5], [15, 9], [14, 8.5], [13, 8], [12, 7.6], [11, 7.2],
+  [10, 6.8], [9, 6.4], [8, 6], [7, 5], [6, 4], [5, 3], [4, 2], [3, 1]
+];
+const FEMALE_50M = [
+  [7.5, 5], [7.6, 4.75], [7.7, 4.5], [8.0, 4.25], [8.3, 4], [8.5, 3.9], [8.7, 3.8],
+  [8.9, 3.7], [9.1, 3.6], [9.3, 3.5], [9.5, 3.4], [9.7, 3.3], [9.9, 3.2],
+  [10.1, 3.1], [10.3, 3], [10.5, 2.5], [10.7, 2], [10.9, 1.5], [11.1, 1], [11.3, 0.5]
+];
+const MALE_50M = [
+  [6.7, 5], [6.8, 4.75], [6.9, 4.5], [7.0, 4.25], [7.1, 4], [7.3, 3.9], [7.5, 3.8],
+  [7.7, 3.7], [7.9, 3.6], [8.1, 3.5], [8.3, 3.4], [8.5, 3.3], [8.7, 3.2],
+  [8.9, 3.1], [9.1, 3], [9.3, 2.5], [9.5, 2], [9.7, 1.5], [9.9, 1], [10.1, 0.5]
+];
+const FEMALE_LJ = [
+  [207, 5], [201, 4.75], [195, 4.5], [188, 4.25], [181, 4], [178, 3.9], [175, 3.8],
+  [172, 3.7], [169, 3.6], [166, 3.5], [163, 3.4], [160, 3.3], [157, 3.2],
+  [154, 3.1], [151, 3], [146, 2.5], [141, 2], [136, 1.5], [131, 1], [126, 0.5]
+];
+const MALE_LJ = [
+  [273, 5], [268, 4.75], [263, 4.5], [256, 4.25], [248, 4], [244, 3.9], [240, 3.8],
+  [236, 3.7], [232, 3.6], [228, 3.5], [224, 3.4], [220, 3.3], [216, 3.2],
+  [212, 3.1], [208, 3], [203, 2.5], [198, 2], [193, 1.5], [188, 1], [183, 0.5]
+];
+
+function scoreTime(value, table) {
+  if (value === null || value === undefined || value === '') return 0;
+  for (const [threshold, score] of table) {
+    if (value <= threshold) return score;
+  }
+  return 0;
+}
+function scoreCount(value, table) {
+  if (value === null || value === undefined || value === '') return 0;
+  for (const [threshold, score] of table) {
+    if (value >= threshold) return score;
+  }
+  return 0;
+}
+
+// ========== COURSE CONFIG ==========
+function getCourseConfig(course) {
+  var courses = DB.courses || [];
+  for (var i = 0; i < courses.length; i++) {
+    if (courses[i].name === course) {
+      return { icon: courses[i].icon, name: courses[i].name, sport1Label: '专项一', sport1Max: courses[i].sport1Max, sport2Label: '专项二', sport2Max: courses[i].sport2Max };
+    }
+  }
+  var fb = courses[0] || { name: course || '垒球', icon: '⚾', sport1Max: 20, sport2Max: 20 };
+  return { icon: fb.icon, name: fb.name, sport1Label: '专项一', sport1Max: fb.sport1Max, sport2Label: '专项二', sport2Max: fb.sport2Max };
+}
+
+function updateSportLabels() {
+  const cfg = getCourseConfig(DB.currentCourse || '垒球');
+  $('sportHeader').textContent = `${cfg.icon} 按课程时间录入${cfg.name}专项成绩`;
+  $('sportHint').textContent = `${cfg.sport1Label}(${cfg.sport1Max}分) + ${cfg.sport2Label}(${cfg.sport2Max}分)，直接填分数，移出焦点自动保存`;
+}
+
+// ========== NAVIGATION ==========
+document.getElementById('nav').addEventListener('click', function(e) {
+  if (e.target.tagName !== 'BUTTON') return;
+  const page = e.target.dataset.page;
+  document.querySelectorAll('#nav button').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  $('page-' + page).classList.add('active');
+  if (page === 'students') { populateGroupSelect('studentGroup'); renderStudents(); }
+  if (page === 'attendance') { populateGroupSelect('attQueryGroup'); filterAttStudent(); populateGroupSelect('attGroup'); $('attGroupDate').value = new Date().toISOString().split('T')[0]; }
+  if (page === 'fitness') { populateGroupSelect('fitQueryGroup'); filterFitStudent(); populateGroupSelect('fitGroup'); }
+  if (page === 'sport') { populateGroupSelect('sportGroup'); updateSportLabels(); }
+  if (page === 'competition') { populateGroupSelect('compGroup'); }
+  if (page === 'sunny') { populateGroupSelect('sunnyGroup'); }
+  if (page === 'query') { populateGroupSelect('queryGroup'); filterQueryStudents(); }
+  if (page === 'overview') { populateGroupSelect('overviewGroup'); renderOverview(); }
+});
+
+// ========== STUDENT MANAGEMENT ==========
+var pendingImport = [];
+function matchCoursePrefix(sheetName) {
+  var courses = DB.courses || [];
+  var sorted = courses.slice().sort(function(a, b) { return b.name.length - a.name.length; });
+  for (var i = 0; i < sorted.length; i++) {
+    if (sheetName.indexOf(sorted[i].name) === 0) {
+      return { course: sorted[i].name, rest: sheetName.slice(sorted[i].name.length).trim() };
+    }
+  }
+  return null;
+}
+function courseOptions(selected) {
+  var courses = DB.courses || [];
+  var html = '';
+  for (var i = 0; i < courses.length; i++) {
+    var c = courses[i];
+    html += '<option value="' + esc(c.name) + '"' + (c.name === selected ? ' selected' : '') + '>' + c.icon + ' ' + esc(c.name) + '</option>';
+  }
+  return html;
+}
+function handleFile(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      var data = new Uint8Array(ev.target.result);
+      var wb = XLSX.read(data, { type: 'array' });
+      var manualGroup = $('importGroup').value.trim();
+      var defaultCourse = $('importCourseSelect').value || DB.currentCourse;
+      pendingImport = [];
+      var sheetNames = wb.SheetNames;
+      for (var si = 0; si < sheetNames.length; si++) {
+        try {
+          var sheetName = sheetNames[si];
+          var ws = wb.Sheets[sheetName];
+          if (!ws) continue;
+          var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+          if (!rows || !Array.isArray(rows) || rows.length < 2) continue;
+          var colClass = -1, colName = -1, colSid = -1, colGender = -1;
+          var headerRow = rows[0];
+          if (!Array.isArray(headerRow)) continue;
+          for (var ci = 0; ci < headerRow.length; ci++) {
+            var h = headerRow[ci];
+            if (h === null || h === undefined || h === '') continue;
+            var s = String(h).trim();
+            if (s && colClass < 0 && s.indexOf('班级') >= 0) colClass = ci;
+            if (s && colName < 0 && s.indexOf('姓名') >= 0) colName = ci;
+            if (s && colSid < 0 && s.indexOf('学号') >= 0) colSid = ci;
+            if (s && colGender < 0 && s.indexOf('性别') >= 0) colGender = ci;
+          }
+          if (colClass < 0 || colName < 0 || colSid < 0) continue;
+          // 前缀识别课程 + 课程时间
+          var match = matchCoursePrefix(sheetName);
+          var course, group;
+          if (match) {
+            course = match.course;
+            group = match.rest || sheetName;
+          } else {
+            course = defaultCourse;
+            group = manualGroup || sheetName;
+          }
+          var students = [];
+          for (var i = 1; i < rows.length; i++) {
+            var r = rows[i];
+            if (!r || !Array.isArray(r)) continue;
+            var nameVal = r[colName];
+            if (nameVal === null || nameVal === undefined || String(nameVal).trim() === '') continue;
+            var sidVal = r[colSid];
+            if (sidVal === null || sidVal === undefined || String(sidVal).trim() === '') continue;
+            var sid = String(sidVal).trim();
+            var name = String(nameVal).trim();
+            var gender = '男';
+            if (colGender >= 0) {
+              var gv = r[colGender];
+              if (gv !== null && gv !== undefined) {
+                if (String(gv).indexOf('女') >= 0) gender = '女';
+              }
+            }
+            var cls = String(r[colClass] || '').trim();
+            students.push({ class: cls, name: name, sid: sid, gender: gender });
+          }
+          if (students.length > 0) {
+            pendingImport.push({ sheetName: sheetName, course: course, group: group, students: students });
+          }
+        } catch(sheetErr) {
+          console.error('Sheet ' + sheetName + ' error:', sheetErr);
+        }
+      }
+      if (pendingImport.length === 0) {
+        alert('未找到有效数据，请检查Excel是否包含"班级、姓名、学号"列');
+        return;
+      }
+      renderImportConfirm();
+    } catch(err) {
+      console.error(err);
+      alert('解析失败: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+function renderImportConfirm() {
+  var list = $('importConfirmList');
+  var html = '';
+  for (var i = 0; i < pendingImport.length; i++) {
+    var p = pendingImport[i];
+    html += '<div class="cm-row">' +
+      '<span class="cm-name" style="font-size:12px;font-weight:normal">' + esc(p.sheetName) + '（' + p.students.length + '人）</span>' +
+      '<select onchange="pendingImport[' + i + '].course = this.value">' + courseOptions(p.course) + '</select>' +
+    '</div>';
+  }
+  list.innerHTML = html || '<div style="color:var(--text2);padding:12px;text-align:center">未找到有效数据</div>';
+  $('importConfirmModal').classList.remove('hidden');
+}
+function cancelImport() {
+  pendingImport = [];
+  $('importConfirmModal').classList.add('hidden');
+}
+function confirmImport() {
+  var oldMap = {};
+  for (var k = 0; k < DB.students.length; k++) {
+    var os = DB.students[k];
+    oldMap[(os.course || '') + '|' + os.sid + '|' + os.name] = os;
+  }
+  var newByGroup = {};
+  var groupOrder = [];
+  var totalImported = 0, totalKept = 0;
+  for (var i = 0; i < pendingImport.length; i++) {
+    var p = pendingImport[i];
+    var course = p.course;
+    var group = p.group;
+    var groupKey = course + '|' + group;
+    if (!newByGroup[groupKey]) { newByGroup[groupKey] = []; groupOrder.push({ course: course, group: group }); }
+    for (var j = 0; j < p.students.length; j++) {
+      var st = p.students[j];
+      var key = course + '|' + st.sid + '|' + st.name;
+      var old = oldMap[key];
+      if (old) {
+        newByGroup[groupKey].push({
+          id: old.id, class: st.class || old.class, name: st.name, sid: st.sid, gender: st.gender,
+          course: course, group: group, exempt: old.exempt,
+          attendance: old.attendance || [], fitness: old.fitness || {}, sport: old.sport || {},
+          comp: old.comp || { comp1: null, comp2: null, school: null }, sunny: old.sunny, sunny_note: old.sunny_note
+        });
+        totalKept++;
+      } else {
+        newByGroup[groupKey].push({
+          id: Date.now() + '_' + Math.random().toString(36).slice(2,8),
+          class: st.class, name: st.name, sid: st.sid, gender: st.gender,
+          course: course, group: group, exempt: false,
+          attendance: [], fitness: {}, sport: {}, comp: { comp1: null, comp2: null, school: null }, sunny: null
+        });
+        totalImported++;
+      }
+    }
+  }
+  for (var gi = 0; gi < groupOrder.length; gi++) {
+    var gCourse = groupOrder[gi].course;
+    var gGroup = groupOrder[gi].group;
+    var gKey = gCourse + '|' + gGroup;
+    DB.students = DB.students.filter(function(s) { return !((s.course || '') === gCourse && (s.group || '').trim() === gGroup); });
+    var newList = newByGroup[gKey];
+    for (var ni = 0; ni < newList.length; ni++) DB.students.push(newList[ni]);
+  }
+  saveDB();
+  $('importConfirmModal').classList.add('hidden');
+  var msg = '✅ 导入完成：新增 ' + totalImported + ' 人，保留成绩 ' + totalKept + ' 人';
+  $('importPreview').innerHTML = '<div class="card" style="background:#E8F8EE"><b>' + msg + '</b></div>';
+  $('importPreview').classList.remove('hidden');
+  renderStudents(); updateCount();
+  pendingImport = [];
+}
+
+function addStudent() {
+  const cls = $('mClass').value.trim(), name = $('mName').value.trim(), sid = $('mSid').value.trim();
+  if (!cls || !name || !sid) { $('addMsg').textContent = '请填写所有字段'; return; }
+  if (DB.students.find(s => s.sid === sid)) { $('addMsg').textContent = '学号重复'; return; }
+  const course = DB.currentCourse;
+  DB.students.push({
+    id: Date.now() + '_' + Math.random().toString(36).slice(2,8),
+    class: cls, name, sid, gender: $('mGender').value, course,
+    group: $('importGroup').value.trim() || '',
+    exempt: false,
+    attendance: [], fitness: {}, sport: {}, comp: { comp1: null, comp2: null, school: null }, sunny: null
+  });
+  saveDB();
+  $('mClass').value = $('mName').value = $('mSid').value = '';
+  $('addMsg').textContent = '';
+  renderStudents(); updateCount();
+}
+
+function removeStudent(id) {
+  if (!confirm('确定删除该学生？所有成绩数据将一并删除。')) return;
+  DB.students = DB.students.filter(s => s.id !== id);
+  saveDB(); renderStudents(); updateCount();
+}
+function clearAll() {
+  if (!confirm('确定清空全部学生和成绩数据？此操作不可恢复！')) return;
+  DB.students = []; saveDB(); renderStudents(); updateCount();
+}
+function editGroup(sid) {
+  const s = getStudent(sid); if (!s) return;
+  const newGroup = prompt('修改课程时间（如: 周一1-2）：', s.group || '');
+  if (newGroup === null) return; // cancelled
+  s.group = newGroup.trim();
+  saveDB(); renderStudents(); updateCount();
+}
+function toggleExempt(sid) {
+  const s = getStudent(sid); if (!s) return;
+  s.exempt = !s.exempt; saveDB(); renderStudents();
+}
+function toggleSelectAll() {
+  const checked = document.getElementById('selectAll').checked;
+  document.querySelectorAll('.student-cb').forEach(cb => cb.checked = checked);
+  updateBatchBtn();
+}
+function updateBatchBtn() {
+  const checked = document.querySelectorAll('.student-cb:checked').length;
+  const btn = document.getElementById('batchDelBtn');
+  btn.disabled = checked === 0;
+  btn.textContent = `🗑 删除选中（${checked}）`;
+}
+function batchDelete() {
+  const ids = Array.from(document.querySelectorAll('.student-cb:checked')).map(cb => cb.value);
+  if (ids.length === 0) return;
+  if (!confirm(`确定删除选中的 ${ids.length} 名学生？`)) return;
+  DB.students = DB.students.filter(s => !ids.includes(s.id));
+  saveDB(); renderStudents(); updateCount();
+  document.getElementById('selectAll').checked = false;
+}
+
+function renderStudents() {
+  const tbody = $('studentTbody');
+  var students = DB.currentCourse ? DB.students.filter(s => (s.course || '') === DB.currentCourse) : DB.students;
+  var selGroup = ($('studentGroup') && $('studentGroup').value) || '';
+  if (selGroup) students = students.filter(function(s) { return (s.group || '').trim() === selGroup; });
+  if (students.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="color:var(--text2);padding:24px">暂无学生，请导入或手动添加</td></tr>';
+  } else {
+    tbody.innerHTML = students.map(s => {
+      const isExempt = s.exempt === true;
+      return `<tr ${isExempt?'style="color:var(--text2);text-decoration:line-through"':''}>
+        <td><input type="checkbox" class="student-cb" value="${s.id}" onclick="updateBatchBtn()"></td>
+        <td>${esc(s.course||'')}</td><td style="cursor:pointer" onclick="editGroup('${s.id}')" title="点击修改课程时间">${esc(s.group||'')||'<span style="color:var(--text2)">点击设置</span>'}</td><td>${esc(s.class)}</td><td>${esc(s.name)}</td><td>${esc(s.sid)}</td>
+        <td>${s.gender}</td>
+        <td><span class="tag ${isExempt?'tag-info':'tag-warn'}" onclick="toggleExempt('${s.id}')" style="cursor:pointer">${isExempt?'免修':'正常'}</span></td>
+        <td><button class="btn btn-danger btn-sm" onclick="removeStudent('${s.id}')">删除</button></td>
+      </tr>`;
+    }).join('');
+  }
+  $('listInfo').textContent = `共 ${students.length} 人`;
+}
+function updateCount() {
+  const students = DB.currentCourse ? DB.students.filter(s => (s.course || '') === DB.currentCourse) : DB.students;
+  $('studentCount').textContent = `${students.length} 名学生`;
+}
+function populateGroupSelect(elId) {
+  const sel = $(elId); const cur = sel.value;
+  const students = DB.currentCourse ? DB.students.filter(s => (s.course || '') === DB.currentCourse) : DB.students;
+  const groups = [...new Set(students.map(s => (s.group || '').trim()).filter(g => g))];
+  sel.innerHTML = '<option value="">-- 请选择 --</option>' +
+    groups.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
+  if (cur) sel.value = cur;
+}
+function getStudent(id) { return DB.students.find(s => s.id === id); }
+
+// ========== ATTENDANCE ==========
+function loadAttendance() {
+  const sid = $('attStudent').value; const s = getStudent(sid);
+  if (!s) { $('attContent').classList.add('hidden'); return; }
+  $('attContent').classList.remove('hidden');
+  $('attTitle').textContent = `${esc(s.name)} (${esc(s.sid)}) - 考勤`;
+  renderAttStats(s); renderAttLog(s);
+  $('attDate').value = new Date().toISOString().split('T')[0];
+}
+function addAttendance() {
+  const sid = $('attStudent').value; const s = getStudent(sid);
+  if (!s) return;
+  const type = $('attType').value, date = $('attDate').value, note = $('attNote').value.trim();
+  if (!date) { alert('请选择日期'); return; }
+  s.attendance = s.attendance || [];
+  s.attendance.push({ type, date, note });
+  saveDB(); $('attNote').value = '';
+  renderAttStats(s); renderAttLog(s);
+}
+function removeAttendance(sid, idx) {
+  const s = getStudent(sid); if (!s) return;
+  s.attendance.splice(idx, 1); saveDB();
+  renderAttStats(s); renderAttLog(s);
+}
+function consecutiveJianxi(s) {
+  const att = (s.attendance || []).filter(a => a.type === '见习');
+  if (att.length === 0) return 0;
+  att.sort((a, b) => new Date(b.date) - new Date(a.date));
+  let count = 0;
+  const today = new Date($('attGroupDate').value + 'T00:00:00');
+  let expected = today;
+  for (const a of att) {
+    const ad = new Date(a.date + 'T00:00:00');
+    if (count === 0) { count = 1; expected = new Date(ad); expected.setDate(expected.getDate() - 7); }
+    else if (Math.abs(ad - expected) < 3 * 24 * 60 * 60 * 1000) { count++; expected = new Date(ad); expected.setDate(expected.getDate() - 7); }
+    else break;
+  }
+  return count;
+}
+function calcAttendance(s) {
+  if (s.exempt === true) return { score: 10, kuang: 0, bing: 0, shi: 0, gong: 0, jianxi: 0, nonOfficial: 0, disqualified: false };
+  const att = s.attendance || [];
+  let score = 10, kuang = 0, bing = 0, shi = 0, gong = 0, jianxi = 0;
+  for (const a of att) {
+    if (a.type === '旷课') { kuang++; score -= 5; }
+    else if (a.type === '病假') { bing++; if (bing===2) score-=1; else if (bing===3) score-=3; else if (bing>=4) score-=5; }
+    else if (a.type === '事假') { shi++; score -= 2; }
+    else if (a.type === '公假') { gong++; }
+    else if (a.type === '见习') { jianxi++; }
+  }
+  const nonOfficial = kuang + bing + shi;
+  return { score: Math.max(0, score), kuang, bing, shi, gong, jianxi, nonOfficial, disqualified: nonOfficial >= 5 };
+}
+function weekNum(dateStr) {
+  if (!DB.startDate || !dateStr) return null;
+  var semStart = new Date(DB.startDate + 'T00:00:00');
+  var ad = new Date(dateStr + 'T00:00:00');
+  var diff = Math.floor((ad - semStart) / (7 * 24 * 60 * 60 * 1000)) + 1;
+  if (diff < 1 || diff > 16) return null;
+  return diff;
+}
+function renderAttStats(s) {
+  var a = calcAttendance(s);
+  function weeksOf(type) {
+    var weeks = [];
+    (s.attendance || []).forEach(function(x) {
+      if (x.type === type && x.date) {
+        var w = weekNum(x.date);
+        if (w) weeks.push(w);
+      }
+    });
+    weeks.sort(function(a, b) { return a - b; });
+    return weeks.length > 0 ? weeks.map(function(w) { return '第' + w + '周'; }).join('、') : '';
+  }
+  function card(num, label, extra) {
+    return '<div class="stat-card"><div class="num">' + num + '</div><div class="label">' + label + (extra ? '<br><span style="font-size:10px;color:var(--text2)">' + extra + '</span>' : '') + '</div></div>';
+  }
+  $('attStats').innerHTML =
+    '<div class="stat-card"><div class="num" style="color:' + (a.disqualified ? 'var(--danger)' : 'var(--primary)') + '">' + a.score + '</div><div class="label">考勤得分/10</div></div>' +
+    card(a.kuang, '旷课', weeksOf('旷课')) +
+    card(a.bing, '病假', weeksOf('病假')) +
+    card(a.shi, '事假', weeksOf('事假')) +
+    card(a.gong, '公假', weeksOf('公假')) +
+    card(a.jianxi, '见习', weeksOf('见习')) +
+    (a.disqualified ? '<div class="stat-card"><div class="num" style="color:var(--danger)">⚠️</div><div class="label" style="color:var(--danger)">取消考试资格</div></div>' : '');
+}
+function renderAttLog(s) {
+  const att = s.attendance || [];
+  if (att.length === 0) { $('attLog').innerHTML = '<div style="color:var(--text2);padding:12px;text-align:center">暂无记录</div>'; return; }
+  $('attLog').innerHTML = att.map(function(a, i) {
+    var w = weekNum(a.date);
+    var weekStr = w ? '第' + w + '周 ' : '';
+    return '<div class="row">' +
+      '<span><span class="tag ' + (a.type==='旷课'?'tag-danger':a.type==='见习'?'tag-info':'tag-warn') + '">' + a.type + '</span> ' + weekStr + a.date + ' ' + (a.note?esc(a.note):'') + '</span>' +
+      '<span class="remove-btn" onclick="removeAttendance(\'' + s.id + '\',' + i + ')">✕</span>' +
+    '</div>';
+  }).join('');
+}
+function loadGroupAttendance() {
+  const group = $('attGroup').value, date = $('attGroupDate').value;
+  const container = $('groupAttContent');
+  if (!group || !date) { container.innerHTML = '<div style="color:var(--text2);padding:12px;text-align:center">请选择课程时间和日期</div>'; return; }
+  const students = DB.students.filter(s => (s.course || '') === DB.currentCourse && (s.group || '').trim() === group);
+  if (students.length === 0) { container.innerHTML = '<div style="color:var(--text2);padding:12px;text-align:center">该课程时间暂无学生</div>'; return; }
+  const ATT_SYMBOL = { '出勤': '✓', '旷课': '○', '病假': '◎', '事假': '⊕', '公假': '√', '见习': '△' };
+  const attTypes = ['旷课','病假','事假','公假','见习'];
+  let html = `<div style="overflow-x:auto"><table><thead><tr><th style="width:40px">序号</th><th>姓名</th><th>学号</th><th>状态</th><th>今日</th><th style="min-width:200px">标记</th></tr></thead><tbody>`;
+  let attSeq = 0;
+  for (const s of students) {
+    attSeq++;
+    const exempt = s.exempt === true;
+    const att = (s.attendance || []).filter(a => a.date === date);
+    let symbol = att.length > 0 ? (ATT_SYMBOL[att[0].type] || '') : '';
+    if (att.length > 0 && att[0].type === '见习') { const cc = consecutiveJianxi(s); if (cc >= 2) symbol = '△(' + cc + ')'; }
+    let clr = '';
+    if (symbol === '✓') clr = 'var(--success)';
+    else if (symbol.startsWith('△')) clr = 'var(--primary)';
+    else if (symbol) clr = 'var(--danger)';
+    html += `<tr><td style="color:var(--text2)">${attSeq}</td><td>${esc(s.name)}</td><td>${esc(s.sid)}</td>
+      <td>${exempt?'<span class="tag tag-danger">免修</span>':'<span class="tag tag-warn">正常</span>'}</td>
+      <td style="font-size:20px;font-weight:bold;${clr?'color:'+clr:''}">${exempt?'':symbol}</td>
+      <td><button class="btn btn-sm btn-outline" onclick="markGroupAtt('${s.id}','${date}','')" style="padding:2px 6px;margin:1px;font-size:12px" ${exempt?'disabled':''}>出勤</button>`;
+    for (const t of attTypes) {
+      html += `<button class="btn btn-sm btn-outline" onclick="markGroupAtt('${s.id}','${date}','${t}')" style="padding:2px 6px;margin:1px;font-size:12px" ${exempt?'disabled':''}>${ATT_SYMBOL[t]}${t}</button>`;
+    }
+    html += `</td></tr>`;
+  }
+  html += '</tbody></table></div>';
+  const jianxiList = [];
+  const semStart = DB.startDate ? new Date(DB.startDate + 'T00:00:00') : null;
+  for (const s of students) {
+    const jx = (s.attendance || []).filter(a => a.type === '见习' && a.date);
+    if (jx.length > 0) {
+      const weeks = jx.map(a => { if (!semStart) return a.date; const diff = Math.floor((new Date(a.date + 'T00:00:00') - semStart) / (7*24*60*60*1000)) + 1; return diff >= 1 && diff <= 16 ? '第' + diff + '周' : a.date; }).join('、');
+      jianxiList.push({ name: s.name, sid: s.sid, weeks });
+    }
+  }
+  if (jianxiList.length > 0) {
+    html += `<div class="card" style="margin-top:12px"><h3>📋 见习记录</h3><table><thead><tr><th>姓名</th><th>学号</th><th>见习周次</th></tr></thead><tbody>`;
+    for (const j of jianxiList) html += `<tr><td>${esc(j.name)}</td><td>${esc(j.sid)}</td><td>${esc(j.weeks)}</td></tr>`;
+    html += '</tbody></table></div>';
+  }
+  // 考勤统计：列出所有非出勤记录及周次
+  const ATT_TYPES = ['旷课','病假','事假','公假','见习'];
+  const attSummary = [];
+  for (const s of students) {
+    const records = (s.attendance || []).filter(a => a.date && ATT_TYPES.indexOf(a.type) >= 0);
+    if (records.length > 0) {
+      records.sort((a,b) => new Date(a.date) - new Date(b.date));
+      const items = records.map(a => {
+        const w = weekNum(a.date);
+        const weekLabel = w ? '第' + w + '周' : '';
+        const dateLabel = a.date.slice(5).replace('-', '/');
+        return (weekLabel ? weekLabel + ' ' : '') + dateLabel + '·' + a.type;
+      }).join('　');
+      attSummary.push({ name: s.name, sid: s.sid, items });
+    }
+  }
+  if (attSummary.length > 0) {
+    html += `<div class="card" style="margin-top:12px"><h3>📋 考勤统计</h3>
+      <table><thead><tr><th>姓名</th><th>学号</th><th>考勤记录（周次·类型）</th></tr></thead><tbody>`;
+    for (const j of attSummary) {
+      html += `<tr><td>${esc(j.name)}</td><td>${esc(j.sid)}</td><td style="font-size:13px">${esc(j.items)}</td></tr>`;
+    }
+    html += '</tbody></table></div>';
+  }
+  container.innerHTML = html;
+}
+function markGroupAtt(sid, date, type) {
+  const s = getStudent(sid); if (!s || s.exempt === true) return;
+  s.attendance = s.attendance || [];
+  const targetType = type || '出勤';
+  // 查找该日期已有记录
+  var existing = null;
+  for (var i = 0; i < s.attendance.length; i++) {
+    if (s.attendance[i].date === date) { existing = s.attendance[i]; break; }
+  }
+  // 再点同一个类型 → 恢复空白（删除该日期记录）
+  if (existing && existing.type === targetType) {
+    s.attendance = s.attendance.filter(function(a) { return a.date !== date; });
+    saveDB(); loadGroupAttendance();
+    return;
+  }
+  // 否则替换为该类型
+  s.attendance = s.attendance.filter(function(a) { return a.date !== date; });
+  s.attendance.push({ type: targetType, date: date, note: '' });
+  saveDB(); loadGroupAttendance();
+}
+
+// ========== FITNESS ==========
+function loadFitness() {
+  const sid = $('fitStudent').value; const s = getStudent(sid);
+  if (!s) { $('fitContent').classList.add('hidden'); return; }
+  $('fitContent').classList.remove('hidden');
+  $('fitTitle').textContent = `${esc(s.name)} (${esc(s.sid)}) - 身体素质`;
+  s.fitness = s.fitness || {};
+  const f = s.fitness;
+  let html = '';
+  if (s.gender === '女') {
+    html += fieldRow('800m跑', 'f_800m', f.f_800m, '秒，如 3\'30" 或 210');
+    html += fieldRow('仰卧起坐', 'f_situp', f.f_situp, '个');
+    html += fieldRow('50m跑', 'f_50m', f.f_50m, '秒，如 7.5');
+    html += fieldRow('立定跳远', 'f_lj', f.f_lj, 'cm');
+  } else {
+    html += fieldRow('1000m跑', 'f_1000m', f.f_1000m, '秒，如 3\'27" 或 207');
+    html += fieldRow('引体向上', 'f_pullup', f.f_pullup, '个');
+    html += fieldRow('50m跑', 'f_50m', f.f_50m, '秒，如 6.7');
+    html += fieldRow('立定跳远', 'f_lj', f.f_lj, 'cm');
+  }
+  $('fitInputs').innerHTML = html;
+}
+function fieldRow(label, key, val, placeholder) {
+  return `<div class="form-row" style="margin-bottom:8px"><div style="flex:0 0 100px"><label>${label}</label></div><div><input id="${key}" value="${val||''}" placeholder="${placeholder||''}"></div><div style="flex:0 0 80px"><span style="font-size:13px;color:var(--text2)" id="${key}_score"></span></div></div>`;
+}
+function saveFitness() {
+  const sid = $('fitStudent').value; const s = getStudent(sid); if (!s) return;
+  s.fitness = s.fitness || {};
+  if (s.gender === '女') {
+    s.fitness.f_800m = $('f_800m').value.trim();
+    s.fitness.f_situp = $('f_situp').value.trim();
+    s.fitness.f_50m = $('f_50m').value.trim();
+    s.fitness.f_lj = $('f_lj').value.trim();
+  } else {
+    s.fitness.f_1000m = $('f_1000m').value.trim();
+    s.fitness.f_pullup = $('f_pullup').value.trim();
+    s.fitness.f_50m = $('f_50m').value.trim();
+    s.fitness.f_lj = $('f_lj').value.trim();
+  }
+  saveDB();
+  const scores = calcFitness(s);
+  $('fitInputs').querySelectorAll('[id$="_score"]').forEach(el => {
+    const key = el.id.replace('_score','');
+    el.textContent = scores[key] !== undefined ? scores[key].toFixed(1) + '分' : '';
+  });
+  alert('✅ 已保存');
+}
+function calcFitness(s) {
+  const f = s.fitness || {}; const result = {};
+  if (s.gender === '女') {
+    result.f_800m = scoreTime(timeToSec(f.f_800m), FEMALE_800M);
+    result.f_situp = scoreCount(parseFloat(f.f_situp), FEMALE_SITUPS);
+    result.f_50m = scoreTime(parseFloat(f.f_50m), FEMALE_50M);
+    result.f_lj = scoreCount(parseFloat(f.f_lj), FEMALE_LJ);
+  } else {
+    result.f_1000m = scoreTime(timeToSec(f.f_1000m), MALE_1000M);
+    result.f_pullup = scoreCount(parseFloat(f.f_pullup), MALE_PULLUPS);
+    result.f_50m = scoreTime(parseFloat(f.f_50m), MALE_50M);
+    result.f_lj = scoreCount(parseFloat(f.f_lj), MALE_LJ);
+  }
+  result.total = Object.values(result).reduce((a,b) => a + b, 0);
+  return result;
+}
+function loadGroupFitness() {
+  const group = $('fitGroup').value, item = $('fitItem').value;
+  const container = $('groupFitContent');
+  if (!group || !item) { container.innerHTML = '<div style="color:var(--text2);padding:12px;text-align:center">请选择课程时间和测试项目</div>'; return; }
+  const students = DB.students.filter(s => (s.course || '') === DB.currentCourse && (s.group || '').trim() === group);
+  if (students.length === 0) { container.innerHTML = '<div style="color:var(--text2);padding:12px;text-align:center">该课程时间暂无学生</div>'; return; }
+  const isFemaleOnly = item === 'f_800m' || item === 'f_situp';
+  const isMaleOnly = item === 'f_1000m' || item === 'f_pullup';
+  let html = `<div style="overflow-x:auto"><table><thead><tr><th style="width:40px">序号</th><th>姓名</th><th>学号</th><th>性别</th><th>成绩</th><th>得分</th></tr></thead><tbody>`;
+  let fitSeq = 0;
+  for (const s of students) {
+    fitSeq++;
+    s.fitness = s.fitness || {};
+    const curVal = s.fitness[item] || '';
+    if ((isFemaleOnly && s.gender !== '女') || (isMaleOnly && s.gender !== '男')) {
+      html += `<tr style="color:var(--text2)"><td>${fitSeq}</td><td>${esc(s.name)}</td><td>${esc(s.sid)}</td><td>${s.gender}</td><td colspan="2">— 无需测试</td></tr>`;
+      continue;
+    }
+    let placeholder = '';
+    if (item === 'f_50m') placeholder = '秒，如 7.5';
+    else if (item === 'f_800m' || item === 'f_1000m') placeholder = '分:秒 如 3:30';
+    else if (item === 'f_lj') placeholder = 'cm';
+    else if (item === 'f_situp' || item === 'f_pullup') placeholder = '个';
+    html += `<tr><td style="color:var(--text2)">${fitSeq}</td><td>${esc(s.name)}</td><td>${esc(s.sid)}</td><td>${s.gender}</td>
+      <td><input type="text" id="gf_${s.id}" value="${esc(curVal)}" placeholder="${placeholder}" onchange="saveGroupFitness('${s.id}','${item}')" style="width:90px;padding:6px 8px;font-size:14px"></td>
+      <td><span id="gf_score_${s.id}" style="font-weight:bold;font-size:15px">${calcFitnessScore(s, item)}</span></td></tr>`;
+  }
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+function calcFitnessScore(s, item) {
+  s.fitness = s.fitness || {};
+  const val = s.fitness[item]; if (!val) return '';
+  if (item === 'f_50m') return scoreTime(parseFloat(val), s.gender === '女' ? FEMALE_50M : MALE_50M) + '分';
+  if (item === 'f_800m') return scoreTime(timeToSec(val), FEMALE_800M) + '分';
+  if (item === 'f_1000m') return scoreTime(timeToSec(val), MALE_1000M) + '分';
+  if (item === 'f_lj') return scoreCount(parseFloat(val), s.gender === '女' ? FEMALE_LJ : MALE_LJ) + '分';
+  if (item === 'f_situp') return scoreCount(parseFloat(val), FEMALE_SITUPS) + '分';
+  if (item === 'f_pullup') return scoreCount(parseFloat(val), MALE_PULLUPS) + '分';
+  return '';
+}
+function saveGroupFitness(sid, item) {
+  const s = getStudent(sid); if (!s) return;
+  s.fitness = s.fitness || {};
+  s.fitness[item] = document.getElementById('gf_' + sid).value.trim();
+  saveDB();
+  document.getElementById('gf_score_' + sid).textContent = calcFitnessScore(s, item);
+}
+
+// ========== SPORT (专项) ==========
+function loadGroupSport() {
+  const group = $('sportGroup').value;
+  const container = $('groupSportContent');
+  if (!group) { container.innerHTML = '<div style="color:var(--text2);padding:12px;text-align:center">请选择课程时间</div>'; return; }
+  const students = DB.students.filter(s => (s.course || '') === DB.currentCourse && (s.group || '').trim() === group);
+  if (students.length === 0) { container.innerHTML = '<div style="color:var(--text2);padding:12px;text-align:center">该课程时间暂无学生</div>'; return; }
+  const firstCourse = students[0].course;
+  const cfg = getCourseConfig(firstCourse || '垒球');
+  let html = `<div style="overflow-x:auto"><table>
+    <thead><tr><th style="width:40px">序号</th><th>姓名</th><th>学号</th><th>性别</th><th>${cfg.sport1Label}<br>(${cfg.sport1Max}分)</th><th>${cfg.sport2Label}<br>(${cfg.sport2Max}分)</th></tr></thead><tbody>`;
+  let sportSeq = 0;
+  for (const s of students) {
+    sportSeq++;
+    s.sport = s.sport || { sp1_score: null, sp2_score: null };
+    const v1 = s.sport.sp1_score !== null && s.sport.sp1_score !== undefined ? s.sport.sp1_score : '';
+    const v2 = s.sport.sp2_score !== null && s.sport.sp2_score !== undefined ? s.sport.sp2_score : '';
+    html += `<tr>
+      <td style="color:var(--text2)">${sportSeq}</td><td>${esc(s.name)}</td><td>${esc(s.sid)}</td><td>${s.gender}</td>
+      <td><input type="number" id="gsp1_${s.id}" value="${v1}" placeholder="0-${cfg.sport1Max}" onchange="saveGroupSport('${s.id}','sp1_score',${cfg.sport1Max})" style="width:70px;padding:4px 6px;font-size:13px"></td>
+      <td><input type="number" id="gsp2_${s.id}" value="${v2}" placeholder="0-${cfg.sport2Max}" onchange="saveGroupSport('${s.id}','sp2_score',${cfg.sport2Max})" style="width:70px;padding:4px 6px;font-size:13px"></td>
+    </tr>`;
+  }
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+function saveGroupSport(sid, field, maxVal) {
+  const s = getStudent(sid); if (!s) return;
+  s.sport = s.sport || {};
+  const val = document.getElementById((field === 'sp1_score' ? 'gsp1_' : 'gsp2_') + sid).value;
+  let num = val === '' || val === null ? null : Math.min(maxVal, Math.max(0, parseFloat(val) || 0));
+  s.sport[field] = num;
+  saveDB();
+}
+
+// ========== COMPETITION (赛事) ==========
+function loadGroupComp() {
+  const group = $('compGroup').value;
+  const container = $('groupCompContent');
+  if (!group) { container.innerHTML = '<div style="color:var(--text2);padding:12px;text-align:center">请选择课程时间</div>'; return; }
+  const students = DB.students.filter(s => (s.course || '') === DB.currentCourse && (s.group || '').trim() === group);
+  if (students.length === 0) { container.innerHTML = '<div style="color:var(--text2);padding:12px;text-align:center">该课程时间暂无学生</div>'; return; }
+  let html = `<div style="overflow-x:auto"><table>
+    <thead><tr><th style="width:40px">序号</th><th>姓名</th><th>学号</th><th>竞赛一<br>(0-5)</th><th>竞赛二<br>(0-5)</th><th>校级赛事<br>(0-10)</th><th>赛事总分<br>(上限10)</th></tr></thead><tbody>`;
+  let compSeq = 0;
+  for (const s of students) {
+    compSeq++;
+    s.comp = s.comp || { comp1: null, comp2: null, school: null };
+    const c1 = s.comp.comp1 !== null ? s.comp.comp1 : '';
+    const c2 = s.comp.comp2 !== null ? s.comp.comp2 : '';
+    const c3 = s.comp.school !== null ? s.comp.school : '';
+    const total = calcCompScore(s);
+    html += `<tr>
+      <td style="color:var(--text2)">${compSeq}</td><td>${esc(s.name)}</td><td>${esc(s.sid)}</td>
+      <td><select id="gcomp1_${s.id}" onchange="saveGroupComp('${s.id}','comp1')" style="width:60px;padding:4px;font-size:13px">
+        <option value="" ${c1===''?'selected':''}>-</option>
+        ${[5].map(v=>`<option value="${v}" ${c1==v?'selected':''}>${v}</option>`).join('')}
+      </select></td>
+      <td><select id="gcomp2_${s.id}" onchange="saveGroupComp('${s.id}','comp2')" style="width:60px;padding:4px;font-size:13px">
+        <option value="" ${c2===''?'selected':''}>-</option>
+        ${[5].map(v=>`<option value="${v}" ${c2==v?'selected':''}>${v}</option>`).join('')}
+      </select></td>
+      <td><select id="gcomps_${s.id}" onchange="saveGroupComp('${s.id}','school')" style="width:60px;padding:4px;font-size:13px">
+        <option value="" ${c3===''?'selected':''}>-</option>
+        ${[10].map(v=>`<option value="${v}" ${c3==v?'selected':''}>${v}</option>`).join('')}
+      </select></td>
+      <td style="font-weight:bold;color:var(--primary)" id="gcomp_total_${s.id}">${c1!==''||c2!==''||c3!==''?total+'分':''}</td>
+    </tr>`;
+  }
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+function calcCompScore(s) {
+  s.comp = s.comp || { comp1: null, comp2: null, school: null };
+  const c1 = s.comp.comp1 !== null ? s.comp.comp1 : 0;
+  const c2 = s.comp.comp2 !== null ? s.comp.comp2 : 0;
+  const c3 = s.comp.school !== null ? s.comp.school : 0;
+  return Math.min(10, c1 + c2 + c3);
+}
+function saveGroupComp(sid, field) {
+  const s = getStudent(sid); if (!s) return;
+  s.comp = s.comp || { comp1: null, comp2: null, school: null };
+  const idMap = { comp1: 'gcomp1_', comp2: 'gcomp2_', school: 'gcomps_' };
+  const val = document.getElementById(idMap[field] + sid).value;
+  s.comp[field] = val === '' ? null : parseInt(val);
+  saveDB();
+  document.getElementById('gcomp_total_' + sid).textContent = calcCompScore(s) + '分';
+}
+
+// ========== SUNNY ==========
+function loadGroupSunny() {
+  const group = $('sunnyGroup').value;
+  const container = $('groupSunnyContent');
+  if (!group) { container.innerHTML = '<div style="color:var(--text2);padding:12px;text-align:center">请选择课程时间</div>'; return; }
+  const students = DB.students.filter(s => (s.course || '') === DB.currentCourse && (s.group || '').trim() === group);
+  if (students.length === 0) { container.innerHTML = '<div style="color:var(--text2);padding:12px;text-align:center">该课程时间暂无学生</div>'; return; }
+  let html = `<div style="overflow-x:auto"><table><thead><tr><th style="width:40px">序号</th><th>姓名</th><th>学号</th><th>性别</th><th>分数（0-10）</th><th>备注</th></tr></thead><tbody>`;
+  let sunnySeq = 0;
+  for (const s of students) {
+    sunnySeq++;
+    const val = s.sunny !== undefined && s.sunny !== null && s.sunny !== '' ? s.sunny : 10;
+    if (s.sunny === undefined || s.sunny === null || s.sunny === '') { s.sunny = 10; }
+    html += `<tr><td style="color:var(--text2)">${sunnySeq}</td><td>${esc(s.name)}</td><td>${esc(s.sid)}</td><td>${s.gender}</td>
+      <td><select id="gsun_${s.id}" onchange="saveGroupSunny('${s.id}')" style="width:70px;padding:6px 8px;font-size:14px">
+        ${Array.from({length:11},(_,i)=>`<option value="${i}" ${val==i?'selected':''}>${i}</option>`).join('')}
+      </select></td>
+      <td><input type="text" id="gsunNote_${s.id}" value="${esc(s.sunny_note||'')}" placeholder="如：免跑" onchange="saveGroupSunny('${s.id}')" style="width:100px;padding:6px 8px;font-size:13px"></td></tr>`;
+  }
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+  saveDB();
+}
+function saveGroupSunny(sid) {
+  const s = getStudent(sid); if (!s) return;
+  s.sunny = parseInt(document.getElementById('gsun_' + sid).value) || 0;
+  s.sunny_note = (document.getElementById('gsunNote_' + sid)?.value || '').trim();
+  saveDB();
+}
+
+// ========== CALC TOTAL ==========
+function calcTotal(s) {
+  const att = calcAttendance(s);
+  const fit = calcFitness(s);
+  const comp = calcCompScore(s);
+  const cfg = getCourseConfig(s.course || '垒球');
+  s.sport = s.sport || {};
+  const sp1 = s.sport.sp1_score !== null && s.sport.sp1_score !== undefined ? s.sport.sp1_score : 0;
+  const sp2 = s.sport.sp2_score !== null && s.sport.sp2_score !== undefined ? s.sport.sp2_score : 0;
+  const sunny = s.sunny !== undefined && s.sunny !== null && s.sunny !== '' ? (parseFloat(s.sunny) || 0) : 10;
+  return {
+    att: att.score, fit: fit.total, sp1, sp2, comp,
+    sunny: Math.min(10, Math.max(0, sunny)),
+    total: att.score + fit.total + sp1 + sp2 + comp + Math.min(10, Math.max(0, sunny)),
+    disqualified: att.disqualified
+  };
+}
+
+// ========== OVERVIEW ==========
+function getOverviewStudents() {
+  var students = DB.currentCourse ? DB.students.filter(function(s) { return (s.course || '') === DB.currentCourse; }) : DB.students;
+  var selGroup = ($('overviewGroup') && $('overviewGroup').value) || '';
+  if (selGroup) students = students.filter(function(s) { return (s.group || '').trim() === selGroup; });
+  return students;
+}
+function renderOverview() {
+  const thead = $('overviewTable').querySelector('thead');
+  const tbody = $('overviewTable').querySelector('tbody');
+  const students = getOverviewStudents();
+  const cfg = getCourseConfig(DB.currentCourse || '垒球');
+  thead.innerHTML = `<tr>
+    <th>编号</th><th>课程类型</th><th>课程时间</th><th>班级</th><th>姓名</th><th>学号</th><th>性别</th>
+    <th>考勤</th><th>身体素质</th><th>${cfg.sport1Label}</th><th>${cfg.sport2Label}</th><th>赛事</th><th>阳光长跑</th>
+    <th>总分</th><th>状态</th></tr>`;
+  if (students.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="15" style="padding:24px;color:var(--text2)">暂无数据</td></tr>';
+  } else {
+    tbody.innerHTML = students.map(function(s, idx) {
+      const t = calcTotal(s);
+      return `<tr class="${t.disqualified?'disqualified':''}">
+        <td>${idx + 1}</td><td>${esc(s.course||'')}</td><td>${esc(s.group||'')}</td><td>${esc(s.class)}</td><td>${esc(s.name)}</td><td>${esc(s.sid)}</td><td>${s.gender}</td>
+        <td>${s.exempt?'':t.att}</td><td>${s.exempt?'':t.fit.toFixed(1)}</td><td>${s.exempt?'':t.sp1}</td><td>${s.exempt?'':t.sp2}</td><td>${s.exempt?'':t.comp}</td><td>${s.exempt?'':t.sunny}</td>
+        <td><b class="${t.total>=60?'score-good':'score-bad'}">${s.exempt?'':t.total.toFixed(1)}</b></td>
+        <td>${t.disqualified?'<span class="tag tag-danger">取消资格</span>':s.exempt?'<span class="tag tag-info">免修</span>':'<span class="tag tag-info">正常</span>'}</td></tr>`;
+    }).join('');
+  }
+  refreshStats();
+}
+function refreshStats() {
+  const group = $('statGroup').value;
+  const allStudents = getOverviewStudents();
+  if (allStudents.length === 0) { $('statsGrid').innerHTML = '<div style="padding:12px;color:var(--text2)">暂无数据</div>'; return; }
+  let groups = {};
+  if (group === 'group') {
+    for (const s of allStudents) { const c = (s.group || '').trim() || '未分组'; if (!groups[c]) groups[c] = []; groups[c].push(s); }
+  } else if (group === 'class') {
+    for (const s of allStudents) { const c = s.class || '未分组'; if (!groups[c]) groups[c] = []; groups[c].push(s); }
+  } else { groups['全部'] = allStudents; }
+  let html = '';
+  for (const [name, list] of Object.entries(groups)) {
+    const totals = list.map(s => calcTotal(s).total);
+    const avg = totals.reduce((a,b)=>a+b,0) / totals.length;
+    const max = Math.max(...totals), min = Math.min(...totals);
+    const pass = totals.filter(t=>t>=60).length;
+    const dq = list.filter(s => calcAttendance(s).disqualified).length;
+    html += `<div class="card" style="margin-bottom:8px"><h3 style="margin-bottom:8px">${esc(name)} (${list.length}人)</h3>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="num">${avg.toFixed(1)}</div><div class="label">平均分</div></div>
+        <div class="stat-card"><div class="num">${max.toFixed(0)}</div><div class="label">最高分</div></div>
+        <div class="stat-card"><div class="num">${min.toFixed(0)}</div><div class="label">最低分</div></div>
+        <div class="stat-card"><div class="num">${pass}</div><div class="label">及格(≥60)</div></div>
+        <div class="stat-card"><div class="num">${(pass/list.length*100).toFixed(0)}%</div><div class="label">及格率</div></div>
+        ${dq>0?`<div class="stat-card"><div class="num" style="color:var(--danger)">${dq}</div><div class="label" style="color:var(--danger)">取消资格</div></div>`:''}</div></div>`;
+  }
+  $('statsGrid').innerHTML = html;
+}
+
+// ========== QUERY ==========
+// 拼音首字母映射（常用姓氏+名字用字）
+function getPinyinInitials(name) {
+  var map = {
+'安':'A','艾':'A','白':'B','包':'B','鲍':'B','毕':'B','边':'B','卞':'B','薄':'B','卜':'B',
+'蔡':'C','曹':'C','常':'C','车':'C','陈':'C','成':'C','程':'C','池':'C','迟':'C','仇':'C','储':'C','楚':'C','褚':'C','从':'C','崔':'C',
+'戴':'D','邓':'D','狄':'D','刁':'D','丁':'D','董':'D','窦':'D','杜':'D','段':'D',
+'樊':'F','范':'F','方':'F','房':'F','费':'F','丰':'F','封':'F','冯':'F','符':'F','付':'F','傅':'F',
+'盖':'G','甘':'G','高':'G','葛':'G','耿':'G','宫':'G','龚':'G','巩':'G','顾':'G','关':'G','管':'G','郭':'G',
+'韩':'H','杭':'H','郝':'H','何':'H','贺':'H','洪':'H','侯':'H','胡':'H','华':'H','黄':'H','霍':'H',
+'姬':'J','纪':'J','季':'J','贾':'J','简':'J','江':'J','姜':'J','蒋':'J','焦':'J','金':'J','靳':'J','井':'J','居':'J','鞠':'J',
+'康':'K','孔':'K','寇':'K',
+'赖':'L','兰':'L','雷':'L','黎':'L','李':'L','厉':'L','连':'L','梁':'L','廖':'L','林':'L','凌':'L','刘':'L','柳':'L','龙':'L','卢':'L','鲁':'L','陆':'L','路':'L','吕':'L','罗':'L','骆':'L',
+'马':'M','毛':'M','梅':'M','孟':'M','米':'M','苗':'M','闵':'M','莫':'M','牟':'M','穆':'M',
+'倪':'N','年':'N','聂':'N','宁':'N','牛':'N',
+'欧':'O',
+'潘':'P','庞':'P','裴':'P','彭':'P','蒲':'P',
+'戚':'Q','齐':'Q','祁':'Q','钱':'Q','强':'Q','乔':'Q','秦':'Q','邱':'Q','屈':'Q','瞿':'Q','全':'Q',
+'冉':'R','饶':'R','任':'R','荣':'R','阮':'R',
+'桑':'S','沙':'S','单':'S','商':'S','尚':'S','邵':'S','申':'S','沈':'S','盛':'S','施':'S','石':'S','时':'S','史':'S','舒':'S','司':'S','宋':'S','苏':'S','孙':'S',
+'谈':'T','谭':'T','汤':'T','唐':'T','陶':'T','滕':'T','田':'T','童':'T','屠':'T',
+'万':'W','汪':'W','王':'W','韦':'W','卫':'W','魏':'W','温':'W','文':'W','闻':'W','翁':'W','邬':'W','吴':'W','伍':'W','武':'W',
+'奚':'X','席':'X','夏':'X','向':'X','项':'X','萧':'X','肖':'X','谢':'X','辛':'X','邢':'X','熊':'X','徐':'X','许':'X','薛':'X','荀':'X',
+'鄢':'Y','严':'Y','阎':'Y','颜':'Y','晏':'Y','杨':'Y','姚':'Y','叶':'Y','易':'Y','殷':'Y','尹':'Y','应':'Y','尤':'Y','于':'Y','余':'Y','俞':'Y','虞':'Y','郁':'Y','喻':'Y','袁':'Y','岳':'Y',
+'曾':'Z','查':'Z','翟':'Z','詹':'Z','臧':'Z','张':'Z','章':'Z','赵':'Z','甄':'Z','郑':'Z','钟':'Z','周':'Z','朱':'Z','诸':'Z','祝':'Z','庄':'Z','卓':'Z','宗':'Z','邹':'Z','左':'Z',
+'博':'B','波':'B','斌':'B','冰':'B','滨':'B','宝':'B','碧':'B',
+'晨':'C','春':'C','超':'C','婵':'C','诚':'C','成':'C','程':'C','崇':'C','川':'C','纯':'C',
+'丹':'D','东':'D','德':'D','迪':'D','栋':'D','冬':'D','铎':'D','朵':'D',
+'儿':'E',
+'飞':'F','芳':'F','峰':'F','凤':'F','芬':'F','帆':'F','凡':'F','富':'F','菲':'F',
+'刚':'G','国':'G','光':'G','桂':'G','冠':'G','格':'G','歌':'G',
+'辉':'H','华':'H','海':'H','浩':'H','涵':'H','航':'H','豪':'H','翰':'H','红':'H','恒':'H','鸿':'H','宏':'H','慧':'H','惠':'H','欢':'H','晖':'H','皓':'H','赫':'H',
+'杰':'J','君':'J','晶':'J','佳':'J','静':'J','洁':'J','嘉':'J','娟':'J','姣':'J','剑':'J','建':'J','江':'J','健':'J','金':'J','瑾':'J','锦':'J','婧':'J','靖':'J','景':'J','竞':'J','俊':'J','峻':'J','键':'J','津':'J','家':'J',
+'凯':'K','康':'K','坤':'K','珂':'K','柯':'K','可':'K','奎':'K',
+'玲':'L','琳':'L','丽':'L','兰':'L','龙':'L','亮':'L','雷':'L','岚':'L','蓝':'L','澜':'L','朗':'L','乐':'L','莉':'L','莲':'L','良':'L','梁':'L','林':'L','露':'L','伦':'L','洛':'L',
+'敏':'M','美':'M','梦':'M','明':'M','铭':'M','梅':'M','萌':'M','淼':'M','民':'M','墨':'M',
+'宁':'N','娜':'N','男':'N','楠':'N','妮':'N','年':'N','凝':'N',
+'萍':'P','平':'P','鹏':'P','佩':'P','沛':'P','朋':'P',
+'琪':'Q','倩':'Q','晴':'Q','强':'Q','琴':'Q','青':'Q','清':'Q','庆':'Q','琼':'Q','秋':'Q','全':'Q','群':'Q','巧':'Q',
+'瑞':'R','然':'R','荣':'R','如':'R','儒':'R','锐':'R','睿':'R','润':'R','若':'R',
+'珊':'S','诗':'S','思':'S','沙':'S','山':'S','善':'S','生':'S','胜':'S','书':'S','姝':'S','淑':'S','舒':'S','帅':'S','硕':'S','松':'S',
+'涛':'T','婷':'T','彤':'T','天':'T','甜':'T','同':'T','桐':'T',
+'薇':'V','维':'V',
+'文':'W','伟':'W','威':'W','微':'W','为':'W','唯':'W','炜':'W','玮':'W','蔚':'W','雯':'W','武':'W','务':'W','婉':'W',
+'欣':'X','晓':'X','雪':'X','鑫':'X','祥':'X','翔':'X','新':'X','心':'X','星':'X','兴':'X','秀':'X','旭':'X','轩':'X','学':'X','勋':'X','希':'X','行':'X','馨':'X',
+'莹':'Y','颖':'Y','怡':'Y','燕':'Y','阳':'Y','洋':'Y','宇':'Y','雨':'Y','悦':'Y','云':'Y','艺':'Y','毅':'Y','雅':'Y','妍':'Y','彦':'Y','瑶':'Y','耀':'Y','永':'Y','勇':'Y','优':'Y','悠':'Y','瑜':'Y','玉':'Y','育':'Y','裕':'Y','媛':'Y','月':'Y','越':'Y','跃':'Y','意':'Y','溢':'Y','琰':'Y','轶':'Y','钰':'Y','岩':'Y',
+'珍':'Z','子':'Z','梓':'Z','志':'Z','中':'Z','忠':'Z','洲':'Z','珠':'Z','竹':'Z','卓':'Z','姿':'Z','宗':'Z','尊':'Z','之':'Z','知':'Z'
+  };
+  var result = '';
+  for (var i = 0; i < name.length; i++) {
+    var ch = name.charAt(i);
+    var initial = map[ch];
+    if (initial) result += initial;
+  }
+  return result;
+}
+function filterQueryStudents() {
+  var group = $('queryGroup').value;
+  var pinyin = ($('queryPinyin').value || '').trim().toUpperCase();
+  var sel = $('detailStudent');
+  var list = group ? DB.students.filter(function(s) { return (s.course || '') === DB.currentCourse && (s.group || '').trim() === group; }) : DB.students.filter(function(s) { return (s.course || '') === DB.currentCourse; });
+  if (pinyin) {
+    list = list.filter(function(s) {
+      if (getPinyinInitials(s.name).indexOf(pinyin) === 0) return true;
+      if (s.sid.indexOf(pinyin) >= 0) return true;
+      return false;
+    });
+  }
+  sel.innerHTML = '<option value="">-- 请选择 --</option>' +
+    list.map(function(s) { return '<option value="' + s.id + '">' + esc(s.class) + ' - ' + esc(s.name) + ' (' + esc(s.sid) + ')</option>'; }).join('');
+  $('studentDetailContent').innerHTML = '';
+}
+function filterAttStudent() {
+  var group = $('attQueryGroup').value;
+  var pinyin = ($('attPinyin').value || '').trim().toUpperCase();
+  var sel = $('attStudent');
+  var list = group ? DB.students.filter(function(s) { return (s.course || '') === DB.currentCourse && (s.group || '').trim() === group; }) : DB.students.filter(function(s) { return (s.course || '') === DB.currentCourse; });
+  if (pinyin) {
+    list = list.filter(function(s) {
+      if (getPinyinInitials(s.name).indexOf(pinyin) === 0) return true;
+      if (s.sid.indexOf(pinyin) >= 0) return true;
+      return false;
+    });
+  }
+  sel.innerHTML = '<option value="">-- 请选择 --</option>' +
+    list.map(function(s) { return '<option value="' + s.id + '">' + esc(s.class) + ' - ' + esc(s.name) + ' (' + esc(s.sid) + ')</option>'; }).join('');
+  $('attContent').classList.add('hidden');
+}
+function filterFitStudent() {
+  var group = $('fitQueryGroup').value;
+  var pinyin = ($('fitPinyin').value || '').trim().toUpperCase();
+  var sel = $('fitStudent');
+  var list = group ? DB.students.filter(function(s) { return (s.course || '') === DB.currentCourse && (s.group || '').trim() === group; }) : DB.students.filter(function(s) { return (s.course || '') === DB.currentCourse; });
+  if (pinyin) {
+    list = list.filter(function(s) {
+      if (getPinyinInitials(s.name).indexOf(pinyin) === 0) return true;
+      if (s.sid.indexOf(pinyin) >= 0) return true;
+      return false;
+    });
+  }
+  sel.innerHTML = '<option value="">-- 请选择 --</option>' +
+    list.map(function(s) { return '<option value="' + s.id + '">' + esc(s.class) + ' - ' + esc(s.name) + ' (' + esc(s.sid) + ')</option>'; }).join('');
+  $('fitContent').classList.add('hidden');
+}
+function showStudentDetail() {
+  const sid = $('detailStudent').value; const container = $('studentDetailContent');
+  if (!sid) { container.innerHTML = ''; return; }
+  const s = getStudent(sid); if (!s) { container.innerHTML = ''; return; }
+  const f = s.fitness || {};
+  const att = calcAttendance(s), fit = calcFitness(s), total = calcTotal(s);
+  const cfg = getCourseConfig(s.course || '垒球');
+  let html = `<table style="font-size:13px">
+    <tr><td style="width:100px;color:var(--text2)">姓名</td><td><b>${esc(s.name)}</b></td><td style="width:80px;color:var(--text2)">学号</td><td>${esc(s.sid)}</td><td style="width:80px;color:var(--text2)">性别</td><td>${s.gender}</td></tr>
+    <tr><td style="color:var(--text2)">课程类型</td><td>${cfg.icon} ${cfg.name}</td><td style="color:var(--text2)">课程时间</td><td colspan="3">${esc(s.group||'')}</td></tr>
+    <tr><td style="color:var(--text2)">班级</td><td colspan="5">${esc(s.class)}</td></tr>
+    <tr style="background:var(--bg)"><td colspan="6"><b>📅 考勤</b> — 得分：${att.score}/10 ${att.disqualified?'<span class="tag tag-danger">取消资格</span>':''}</td></tr>`;
+  if (s.exempt === true) {
+    html += '<tr><td colspan="6" style="font-size:12px;color:var(--text2)">免修</td></tr>';
+  } else if (s.attendance && s.attendance.length > 0) {
+    const sorted = [...s.attendance].sort((a,b) => new Date(a.date) - new Date(b.date));
+    html += '<tr><td colspan="6" style="font-size:12px">';
+    let hasItems = false;
+    for (const a of sorted) {
+      if (a.type === '出勤' || a.type === '见习') continue;
+      hasItems = true;
+      const sym = { '旷课':'○','病假':'◎','事假':'⊕','公假':'√' }[a.type] || a.type;
+      html += `<span style="margin-right:8px">${a.date} ${sym}${a.type}</span>`;
+    }
+    html += '</td></tr>';
+    if (!hasItems) html += '<tr><td colspan="6" style="font-size:12px;color:var(--success)">全勤</td></tr>';
+  } else {
+    html += '<tr><td colspan="6" style="font-size:12px;color:var(--text2)">无考勤记录</td></tr>';
+  }
+  html += `<tr style="background:var(--bg)"><td colspan="6"><b>💪 身体素质</b> — 总分：${fit.total.toFixed(1)}/30</td></tr>`;
+  if (s.gender === '女') {
+    html += fitnessDetailRow('50m跑', f.f_50m, fit.f_50m, '');
+    html += fitnessDetailRow('800m跑', formatTime(f.f_800m), fit.f_800m, '');
+    html += fitnessDetailRow('立定跳远', f.f_lj, fit.f_lj, 'cm');
+    html += fitnessDetailRow('仰卧起坐', f.f_situp, fit.f_situp, '个');
+  } else {
+    html += fitnessDetailRow('50m跑', f.f_50m, fit.f_50m, '');
+    html += fitnessDetailRow('1000m跑', formatTime(f.f_1000m), fit.f_1000m, '');
+    html += fitnessDetailRow('立定跳远', f.f_lj, fit.f_lj, 'cm');
+    html += fitnessDetailRow('引体向上', f.f_pullup, fit.f_pullup, '个');
+  }
+  html += `<tr style="background:var(--bg)"><td colspan="6"><b>${cfg.icon} ${cfg.name}专项</b></td></tr>`;
+  html += fitnessDetailRow(cfg.sport1Label, total.sp1 + '分', '', '');
+  html += fitnessDetailRow(cfg.sport2Label, total.sp2 + '分', '', '');
+  html += `<tr style="background:var(--bg)"><td colspan="6"><b>🏆 专项赛事</b> — ${total.comp}/10</td></tr>`;
+  html += `<tr style="background:var(--bg)"><td colspan="6"><b>☀️ 阳光长跑</b> — ${total.sunny}/10</td></tr>
+    <tr style="background:var(--bg)"><td><b>🏅 总分</b></td><td><b style="color:var(--primary);font-size:16px">${total.total.toFixed(1)}/100</b></td><td colspan="4"></td></tr></table>`;
+  container.innerHTML = html;
+}
+function fitnessDetailRow(label, raw, score, unit) {
+  const rawStr = raw ? (unit ? raw + unit : raw) : '—';
+  const scoreStr = score !== undefined ? score + '分' : '—';
+  return `<tr><td style="color:var(--text2);width:100px">${label}</td><td>${rawStr}</td><td style="width:80px;color:var(--primary);font-weight:bold">${scoreStr}</td><td colspan="3"></td></tr>`;
+}
+function formatTime(val) {
+  if (!val) return '';
+  const s = timeToSec(val); if (s === null) return val;
+  const m = Math.floor(s / 60);
+  const sec = Math.round(s % 60);
+  return m > 0 ? m + ':' + String(sec).padStart(2, '0') : String(sec);
+}
+
+// ========== EXPORT (41-column template) ==========
+function exportExcel() {
+  var courseName = DB.currentCourse || '垒球';
+  var cfg = getCourseConfig(courseName);
+  var courseStudents = DB.students.filter(function(s) { return (s.course || '') === courseName; });
+  if (courseStudents.length === 0) { alert('当前课程暂无学生数据'); return; }
+  
+  var groups = {};
+  for (var si = 0; si < courseStudents.length; si++) {
+    var s = courseStudents[si];
+    var key = (s.group || '').trim() || s.class || '未分组';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(s);
+  }
+  
+  var wb = XLSX.utils.book_new();
+  var ATT_SYMBOL = { '旷课': '○', '病假': '◎', '事假': '⊕', '公假': '√' };
+  var startDate = DB.startDate ? new Date(DB.startDate + 'T00:00:00') : null;
+  var groupKeys = Object.keys(groups);
+    
+    for (var gi = 0; gi < groupKeys.length; gi++) {
+      var className = groupKeys[gi];
+      var students = groups[className];
+    const rows = [];
+    // Row 1-3: titles
+    const titleRow1 = new Array(41).fill(''); titleRow1[14] = '中 国 传 媒 大 学 体 育 部'; rows.push(titleRow1);
+    const titleRow2 = new Array(41).fill(''); titleRow2[14] = '学 生 考 勤 考 核 成 绩 登 记 表'; rows.push(titleRow2);
+    const titleRow3 = new Array(41).fill(''); titleRow3[14] = '2025－2026学年第 2 学期（春季学期）'; rows.push(titleRow3);
+
+    // Row 4: main headers
+    const h1 = new Array(41).fill('');
+    h1[0] = '序号'; h1[1] = '学 号'; h1[2] = '姓 名'; h1[3] = '班级';
+    h1[4] = '课堂表现  10分';
+    h1[21] = '身体素质30分';
+    h1[30] = `   专项 40分   +  赛事（上限10分）`;
+    h1[38] = '阳光长跑\n10分'; h1[39] = '总\n评'; h1[40] = '备\n注';
+    rows.push(h1);
+
+    // Row 5: sub-headers
+    const h2 = new Array(41).fill('');
+    const weeks = ['第1周','第2周','第3周','第4周','第5周','第6周','第7周','第8周','第9周','第10周','第11周','第12周','第13周','第14周','第15周','第16周'];
+    for (let w = 0; w < 16; w++) h2[4 + w] = weeks[w];
+    h2[20] = '表现总分';
+    h2[21] = '50m'; h2[23] = '800m 女\n1000m 男'; h2[25] = '立定跳远';
+    h2[27] = '仰卧起坐 女\n引体向上 男'; h2[29] = '素\n质\n总\n分';
+    h2[30] = cfg.sport1Label + '\n' + cfg.sport1Max + '分';
+    h2[32] = cfg.sport2Label + '\n' + cfg.sport2Max + '分';
+    h2[34] = '竞\n赛\n一\n5分'; h2[35] = '竞\n赛\n二\n5分'; h2[36] = '校\n级\n赛\n事\n10分';
+    h2[37] = '专项赛事\n总\n分';
+    rows.push(h2);
+
+    // Row 6: score sub-headers
+    const h3 = new Array(41).fill('');
+    h3[21] = '成绩'; h3[22] = '分数';
+    h3[23] = '成绩'; h3[24] = '分数';
+    h3[25] = '成绩'; h3[26] = '分数';
+    h3[27] = '成绩'; h3[28] = '分数';
+    h3[30] = '成\n绩'; h3[31] = '得\n分';
+    h3[32] = '成\n绩'; h3[33] = '得\n分';
+    rows.push(h3);
+
+    // Data rows
+    let seq = 0;
+    for (const s of students) {
+      seq++;
+      const f = s.fitness || {};
+      const t = calcTotal(s);
+      const att = calcAttendance(s);
+      const r = new Array(41).fill('');
+      r[0] = seq; r[1] = s.sid; r[2] = s.name; r[3] = s.class;
+      r[20] = att.score;
+      if (startDate && s.attendance && s.attendance.length > 0) {
+        for (const a of s.attendance) {
+          if (!a.date) continue;
+          const ad = new Date(a.date + 'T00:00:00');
+          const diffMs = ad - startDate;
+          if (diffMs < 0) continue;
+          const weekNum = Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000)) + 1;
+          if (weekNum >= 1 && weekNum <= 16) {
+            const sym = ATT_SYMBOL[a.type]; if (!sym) continue;
+            const idx = 3 + weekNum;
+            r[idx] = r[idx] ? r[idx] + sym : sym;
+          }
+        }
+      }
+      if (s.gender === '女') {
+        r[21] = f.f_50m || '';
+        r[23] = f.f_800m ? formatTime(f.f_800m) : '';
+        r[25] = f.f_lj || '';
+        r[27] = f.f_situp || '';
+        if (!s.exempt) {
+          r[22] = scoreTime(parseFloat(f.f_50m), FEMALE_50M); r[22] = r[22] !== undefined ? r[22] : '';
+          r[24] = scoreTime(timeToSec(f.f_800m), FEMALE_800M); r[24] = r[24] !== undefined ? r[24] : '';
+          r[26] = scoreCount(parseFloat(f.f_lj), FEMALE_LJ); r[26] = r[26] !== undefined ? r[26] : '';
+          r[28] = scoreCount(parseFloat(f.f_situp), FEMALE_SITUPS); r[28] = r[28] !== undefined ? r[28] : '';
+        }
+      } else {
+        r[21] = f.f_50m || '';
+        r[23] = f.f_1000m ? formatTime(f.f_1000m) : '';
+        r[25] = f.f_lj || '';
+        r[27] = f.f_pullup || '';
+        if (!s.exempt) {
+          r[22] = scoreTime(parseFloat(f.f_50m), MALE_50M); r[22] = r[22] !== undefined ? r[22] : '';
+          r[24] = scoreTime(timeToSec(f.f_1000m), MALE_1000M); r[24] = r[24] !== undefined ? r[24] : '';
+          r[26] = scoreCount(parseFloat(f.f_lj), MALE_LJ); r[26] = r[26] !== undefined ? r[26] : '';
+          r[28] = scoreCount(parseFloat(f.f_pullup), MALE_PULLUPS); r[28] = r[28] !== undefined ? r[28] : '';
+        }
+      }
+      r[29] = s.exempt ? '' : t.fit.toFixed(1);
+      // Sport — 成绩列空白，只填得分列
+      r[30] = '';                             // AE: 专项一 成绩（空白）
+      r[31] = t.sp1 !== undefined ? t.sp1 : '';  // AF: 专项一 得分
+      r[32] = '';                             // AG: 专项二 成绩（空白）
+      r[33] = t.sp2 !== undefined ? t.sp2 : '';  // AH: 专项二 得分
+      // Competition
+      s.comp = s.comp || { comp1: null, comp2: null, school: null };
+      r[34] = s.comp.comp1 !== null ? s.comp.comp1 : '';
+      r[35] = s.comp.comp2 !== null ? s.comp.comp2 : '';
+      r[36] = s.comp.school !== null ? s.comp.school : '';
+      r[37] = t.comp !== undefined ? t.comp : '';
+      // Sunny, total, notes
+      r[38] = s.exempt ? '' : (t.sunny !== undefined ? t.sunny : '');
+      r[39] = s.exempt ? '' : t.total.toFixed(1);
+      const notes = [];
+      if (s.exempt) notes.push('免修');
+      if (t.disqualified) notes.push('取消资格');
+      r[40] = notes.join('; ');
+      rows.push(r);
+    }
+
+    // Footer
+    const emptyRow = new Array(41).fill('');
+    rows.push(emptyRow); rows.push(emptyRow); rows.push(emptyRow);
+    const footer1 = new Array(41).fill(''); footer1[14] = `      班  级 ：   ${className}`; rows.push(footer1);
+    const footer2 = new Array(41).fill(''); footer2[14] = '        任课教师：         孙文杰         1'; rows.push(footer2);
+    const footer3 = new Array(41).fill(''); footer3[14] = '        项目名称：    ' + cfg.name + '         1'; rows.push(footer3);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [
+      {wch:5}, {wch:15}, {wch:10}, {wch:25},
+      ...Array(16).fill({wch:4}),
+      {wch:6}, {wch:7}, {wch:5}, {wch:9}, {wch:5}, {wch:7}, {wch:5}, {wch:7}, {wch:5},
+      {wch:6}, {wch:7}, {wch:5}, {wch:7}, {wch:5},
+      {wch:5}, {wch:5}, {wch:7}, {wch:6}, {wch:6}, {wch:6}, {wch:12}
+    ];
+    ws['!merges'] = [];
+    const tgtCol = 14;
+    ws['!merges'].push({s:{r:0,c:tgtCol},e:{r:0,c:40}});
+    ws['!merges'].push({s:{r:1,c:tgtCol},e:{r:1,c:40}});
+    ws['!merges'].push({s:{r:2,c:tgtCol},e:{r:2,c:40}});
+    ws['!merges'].push({s:{r:3,c:4},e:{r:3,c:20}});
+    ws['!merges'].push({s:{r:3,c:21},e:{r:3,c:29}});
+    ws['!merges'].push({s:{r:3,c:30},e:{r:3,c:37}});
+    ws['!merges'].push({s:{r:4,c:21},e:{r:4,c:22}});
+    ws['!merges'].push({s:{r:4,c:23},e:{r:4,c:24}});
+    ws['!merges'].push({s:{r:4,c:25},e:{r:4,c:26}});
+    ws['!merges'].push({s:{r:4,c:27},e:{r:4,c:28}});
+    ws['!merges'].push({s:{r:4,c:30},e:{r:4,c:31}});
+    ws['!merges'].push({s:{r:4,c:32},e:{r:4,c:33}});
+    const footerRow = 7 + students.length + 3;
+    ws['!merges'].push({s:{r:footerRow,c:tgtCol},e:{r:footerRow,c:40}});
+    ws['!merges'].push({s:{r:footerRow+1,c:tgtCol},e:{r:footerRow+1,c:40}});
+    ws['!merges'].push({s:{r:footerRow+2,c:tgtCol},e:{r:footerRow+2,c:40}});
+
+    const sheetName = className.slice(0, 31);
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  }
+  XLSX.writeFile(wb, courseName + '成绩册.xlsx');
+}
+
+// ========== DATA BACKUP ==========
+function exportData() {
+  const data = JSON.stringify(DB, null, 2);
+  const blob = new Blob([data], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `体育成绩_备份_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  document.getElementById('importMsg').textContent = '✅ 导出成功，文件已下载';
+}
+function importData(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.students || !Array.isArray(data.students)) { alert('❌ 文件格式错误'); return; }
+      if (!confirm(`即将导入 ${data.students.length} 名学生数据，覆盖当前全部 ${DB.students.length} 条。确定？`)) return;
+      DB = data; saveDB();
+      renderStudents(); updateCount();
+      $('importMsg').textContent = `✅ 成功导入 ${data.students.length} 名学生数据`;
+      event.target.value = '';
+    } catch(err) { alert('❌ 解析失败: ' + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+// ========== SEMESTER ==========
+function saveSemesterStart() {
+  DB.startDate = document.getElementById('semesterStart').value;
+  saveDB();
+}
+
+// ========== COURSE MANAGE ==========
+function openCourseManage() {
+  renderCourseManage();
+  $('courseManageModal').classList.remove('hidden');
+}
+function closeCourseManage() {
+  $('courseManageModal').classList.add('hidden');
+}
+function modeOf(c) {
+  if (c.sport1Max === 30 && c.sport2Max === 10) return '30+10';
+  return '20+20';
+}
+function renderCourseManage() {
+  var list = $('courseManageList');
+  var courses = DB.courses || [];
+  var html = '';
+  for (var i = 0; i < courses.length; i++) {
+    var c = courses[i];
+    var mode = modeOf(c);
+    html += '<div class="cm-row">' +
+      '<span class="cm-name">' + c.icon + ' ' + esc(c.name) + '</span>' +
+      '<select onchange="changeCourseMode(\'' + c.name + '\', this.value)">' +
+        '<option value="20+20"' + (mode === '20+20' ? ' selected' : '') + '>专项 20+20</option>' +
+        '<option value="30+10"' + (mode === '30+10' ? ' selected' : '') + '>专项 30+10</option>' +
+      '</select>' +
+      '<span class="cm-del" onclick="deleteCourse(\'' + c.name + '\')">✕</span>' +
+    '</div>';
+  }
+  list.innerHTML = html || '<div style="color:var(--text2);padding:12px;text-align:center">暂无课程</div>';
+}
+function changeCourseMode(name, mode) {
+  var courses = DB.courses || [];
+  for (var i = 0; i < courses.length; i++) {
+    if (courses[i].name === name) {
+      if (mode === '30+10') { courses[i].sport1Max = 30; courses[i].sport2Max = 10; }
+      else { courses[i].sport1Max = 20; courses[i].sport2Max = 20; }
+      break;
+    }
+  }
+  saveDB();
+  renderCourseSelect();
+  updateSportLabels();
+}
+function deleteCourse(name) {
+  var hasStudents = false;
+  for (var i = 0; i < DB.students.length; i++) {
+    if ((DB.students[i].course || '') === name) { hasStudents = true; break; }
+  }
+  if (hasStudents) { alert('该课程已有学生数据，无法删除。请先清空该课程的学生。'); return; }
+  if (!confirm('确定删除课程「' + name + '」？')) return;
+  DB.courses = (DB.courses || []).filter(function(c) { return c.name !== name; });
+  if (DB.currentCourse === name) {
+    DB.currentCourse = DB.courses.length > 0 ? DB.courses[0].name : '';
+  }
+  saveDB();
+  renderCourseSelect();
+  renderCourseManage();
+  if (DB.currentCourse) switchCourse(DB.currentCourse);
+  else { renderStudents(); updateCount(); }
+}
+function addCourse() {
+  var name = ($('newCourseName').value || '').trim();
+  if (!name) { alert('请输入课程名称'); return; }
+  for (var i = 0; i < (DB.courses || []).length; i++) {
+    if (DB.courses[i].name === name) { alert('课程名已存在'); return; }
+  }
+  var mode = $('newCourseMode').value;
+  var sport1Max = mode === '30+10' ? 30 : 20;
+  var sport2Max = mode === '30+10' ? 10 : 20;
+  DB.courses.push({ name: name, icon: '🏅', sport1Max: sport1Max, sport2Max: sport2Max });
+  saveDB();
+  $('newCourseName').value = '';
+  renderCourseSelect();
+  renderCourseManage();
+}
+
+// ========== INIT ==========
+restoreCourse();
+updateCount();
+populateGroupSelect('studentGroup');
+renderStudents();
+if (DB.startDate) { const el = document.getElementById('semesterStart'); if (el) el.value = DB.startDate; }
+</script>
+
+<!-- Service Worker -->
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js?v=1').catch(() => {});
+}
+</script>
+
+<!-- 课程管理弹窗 -->
+<div id="courseManageModal" class="modal-mask hidden">
+  <div class="modal-box">
+    <h2>⚙️ 课程管理</h2>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:8px">修改每门课的专项分数组合（专项总分固定40分），或增删课程。</p>
+    <div id="courseManageList"></div>
+    <div class="cm-add-row">
+      <input id="newCourseName" placeholder="新课程名称">
+      <select id="newCourseMode">
+        <option value="20+20">专项 20+20</option>
+        <option value="30+10">专项 30+10</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="addCourse()">➕ 添加</button>
+    </div>
+    <div class="cm-foot">
+      <button class="btn btn-outline btn-block" onclick="closeCourseManage()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 导入确认弹窗 -->
+<div id="importConfirmModal" class="modal-mask hidden">
+  <div class="modal-box">
+    <h2>📥 确认导入</h2>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:8px">请确认每个 Sheet 的课程归类（可手动调整），确认后点「确认导入」。</p>
+    <div id="importConfirmList"></div>
+    <div class="cm-foot">
+      <button class="btn btn-outline" onclick="cancelImport()">取消</button>
+      <button class="btn btn-primary" onclick="confirmImport()">✅ 确认导入</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
