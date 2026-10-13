@@ -441,7 +441,7 @@ const DEFAULT_COURSES = [
   { name: '瑜伽', icon: '🧘', sport1Max: 20, sport2Max: 20 },
   { name: '台球', icon: '🎱', sport1Max: 20, sport2Max: 20 },
   { name: '匹克球', icon: '🏸', sport1Max: 20, sport2Max: 20 },
-  { name: '民族', icon: '🐉', sport1Max: 20, sport2Max: 20 }
+  { name: '民族', icon: '💃🏻', sport1Max: 20, sport2Max: 20 }
 ];
 function cloneCourses() { return JSON.parse(JSON.stringify(DEFAULT_COURSES)); }
 let DB = { students: [], currentCourse: '垒球', courses: cloneCourses() };
@@ -458,6 +458,10 @@ function loadDB() {
     if (DB.students[mi].course === '户外运动') DB.students[mi].course = '户外';
   }
   if (DB.currentCourse === '户外运动') DB.currentCourse = '户外';
+  // 更新民族课程图标
+  for (var ci2 = 0; ci2 < (DB.courses || []).length; ci2++) {
+    if (DB.courses[ci2].name === '民族' && DB.courses[ci2].icon === '🐉') DB.courses[ci2].icon = '💃🏻';
+  }
 }
 loadDB();
 
