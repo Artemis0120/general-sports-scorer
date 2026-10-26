@@ -498,8 +498,15 @@ function timeToSec(t) {
   if (typeof t === 'number') return t;
   if (!t || t === '') return null;
   t = String(t).trim();
-  const m = t.match(/^(\d+)['′:](\d+(?:\.\d+)?)["″]?$/);
+  const m = t.match(/^(\d+)\s*['′:：]\s*(\d+(?:\.\d+)?)\s*["″]?$/);
   if (m) return parseInt(m[1]) * 60 + parseFloat(m[2]);
+  const dm = t.match(/^(\d+)\.(\d{1,2})$/);
+  if (dm) {
+    const min = parseInt(dm[1]);
+    let sec = parseInt(dm[2]);
+    if (dm[2].length === 1) sec *= 10;
+    return min * 60 + sec;
+  }
   const s = parseFloat(t);
   if (isNaN(s)) return null;
   if (s <= 15) return s * 60;
